@@ -1,4 +1,4 @@
-# GemBond — ต้นแบบสาธิต (prototype)
+# GemBond — Prototype
 
 Interactive UI prototype of a collaborative merchant-growth platform for small restaurants.
 All merchants, numbers and outcomes are **synthetic**. No backend, no real campaigns, no payments.
