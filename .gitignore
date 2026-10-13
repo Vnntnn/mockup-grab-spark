@@ -1,0 +1,38 @@
+# dependencies and build output
+node_modules
+dist
+*.tsbuildinfo
+
+# env and secrets
+.env
+.env.*
+!.env.example
+
+# logs and test output
+*.log
+npm-debug.log*
+coverage
+
+# tooling artifacts
+.playwright-mcp
+.vite
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# AI assistant files
+CLAUDE.md
+Audit.md
+AGENTS.md
+GEMINI.md
+.claude/
+.agents/
+.cursor/
+.cursorrules
+.github/copilot-instructions.md
+.mcp.json
+docs/superpowers/

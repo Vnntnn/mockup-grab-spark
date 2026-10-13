@@ -1,0 +1,133 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource/ibm-plex-sans-thai/thai-400.css";
+@import "@fontsource/ibm-plex-sans-thai/thai-500.css";
+@import "@fontsource/ibm-plex-sans-thai/thai-600.css";
+@import "@fontsource/ibm-plex-sans-thai/thai-700.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-400.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-500.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-600.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-700.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'IBM Plex Sans Thai', 'Noto Sans Thai', 'Sarabun', system-ui, sans-serif;
+    --color-forest: var(--forest);
+    --color-sage: var(--sage);
+    --color-sage-strong: var(--sage-strong);
+    --color-saffron: var(--saffron);
+    --color-saffron-soft: var(--saffron-soft);
+    --color-saffron-ink: var(--saffron-ink);
+    --color-success: var(--success);
+    --color-success-soft: var(--success-soft);
+    --color-danger-soft: var(--danger-soft);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* GemBond tokens. Light only: the audience reads this in a bright shop. */
+:root {
+    --background: #f3f5ef;
+    --foreground: #17221d;
+    --card: #ffffff;
+    --card-foreground: #17221d;
+    --popover: #ffffff;
+    --popover-foreground: #17221d;
+    --primary: #14513c;
+    --primary-foreground: #ffffff;
+    --secondary: #e4ece1;
+    --secondary-foreground: #0f3d2e;
+    --muted: #e9efe6;
+    --muted-foreground: #53605a;
+    --accent: #e4ece1;
+    --accent-foreground: #0f3d2e;
+    --destructive: #a3321f;
+    --border: #d5dcd1;
+    --input: #b9c4b5;
+    --ring: #1c6e4e;
+    --chart-1: #14513c;
+    --chart-2: #b4c9ae;
+    --chart-3: #e0a528;
+    --chart-4: #53605a;
+    --chart-5: #a3321f;
+    --radius: 0.875rem;
+    --sidebar: #0f3d2e;
+    --sidebar-foreground: #e4ece1;
+    --sidebar-primary: #e0a528;
+    --sidebar-primary-foreground: #0f3d2e;
+    --sidebar-accent: #14513c;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #1d5a45;
+    --sidebar-ring: #e0a528;
+    --forest: #0f3d2e;
+    --sage: #eef3ec;
+    --sage-strong: #cddcc8;
+    --saffron: #e0a528;
+    --saffron-soft: #fbefcf;
+    --saffron-ink: #6b4700;
+    --success: #1c6e4e;
+    --success-soft: #dff0e6;
+    --danger-soft: #fbe4de;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    font-size: 16px;
+    }
+  body {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    }
+  h1, h2, h3 { line-height: 1.35; letter-spacing: 0; }
+  :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
+}
