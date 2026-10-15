@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Copy, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { Gem } from '@/components/GemMark'
@@ -73,21 +74,29 @@ export function CampaignPreview({ self, partner, campaignId }: { self: Merchant;
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <p className="text-[15px] text-muted-foreground">ลิงก์สาธิตสำหรับโปรโมต (ไม่ได้เผยแพร่จริง)</p>
           <p className="truncate border-b border-border pb-1 font-mono text-[15px]">{link}</p>
-          <Button
-            variant="outline"
-            className="h-11 self-start text-[15px]"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(link)
-                toast.success('คัดลอกลิงก์สาธิตแล้ว')
-              } catch {
-                toast.error('คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')
-              }
-            }}
-          >
-            <Copy data-icon="inline-start" />
-            คัดลอกลิงก์
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className="h-11 min-h-[48px] self-start text-[15px]"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(link)
+                  toast.success('คัดลอกลิงก์สาธิตแล้ว')
+                } catch {
+                  toast.error('คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')
+                }
+              }}
+            >
+              <Copy data-icon="inline-start" />
+              คัดลอกลิงก์
+            </Button>
+            <Button asChild variant="outline" className="h-11 min-h-[48px] self-start text-[15px]">
+              <Link to={`/pair/${campaignId}`}>
+                <ExternalLink data-icon="inline-start" />
+                เปิดมุมมองลูกค้า (Interactive Demo)
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
       <Dialog open={!!menuOf} onOpenChange={(o) => !o && setMenuOf(null)}>
