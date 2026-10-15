@@ -192,13 +192,16 @@ export function computeBackDecision(
     return {
       type: 'replace',
       targetUrl: `/pair/${campaignId}?${query.toString()}`,
-      state: {
-        inJourney: true,
-      },
+      state: historyState?.inJourney
+        ? {
+            inJourney: true,
+            journeyDepth: 4,
+          }
+        : undefined,
     }
   }
 
-  if (historyState?.inJourney) {
+  if (historyState?.inJourney && (historyState.journeyDepth === undefined || historyState.journeyDepth > 1)) {
     return {
       type: 'pop',
       delta: -1,
@@ -225,16 +228,13 @@ export function computeBackDecision(
   return {
     type: 'replace',
     targetUrl: `/pair/${campaignId}?${query.toString()}`,
-    state: {
-      inJourney: true,
-    },
   }
 }
 
-export type NavigateFunctionLike = (
-  to: string | number,
-  options?: { replace?: boolean; state?: HistoryPreEditState | unknown }
-) => void | Promise<unknown>
+export type NavigateFunctionLike = {
+  (to: string, options?: { replace?: boolean; state?: HistoryPreEditState | unknown }): void | Promise<unknown>
+  (delta: number): void | Promise<unknown>
+}
 
 export function applyNavigationDecision(
   navigateFn: NavigateFunctionLike,

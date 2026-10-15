@@ -3,6 +3,7 @@ import { renderToString } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import {
+  applyNavigationDecision,
   parsePairingUrl,
   computeNextStepTarget,
   computeEditEntryTarget,
@@ -19,21 +20,12 @@ describe('navigation-router integration: history stack & 6 scenarios', () => {
   const slugsB = ['moo-satay-10', 'gai-yang', 'peek-gai-tod']
   const camp = 'camp-plan-m-khaohom'
 
-  // Helper to execute a NavigationDecision on a memory router
+  // Helper to execute a NavigationDecision on a memory router using applyNavigationDecision
   async function applyDecision(
     router: ReturnType<typeof createMemoryRouter>,
     decision: NavigationDecision
   ) {
-    if (decision.type === 'push' && decision.targetUrl) {
-      await router.navigate(decision.targetUrl, { state: decision.state })
-    } else if (decision.type === 'replace' && decision.targetUrl) {
-      await router.navigate(decision.targetUrl, {
-        replace: true,
-        state: decision.state ?? router.state.location.state,
-      })
-    } else if (decision.type === 'pop') {
-      await router.navigate(decision.delta ?? -1)
-    }
+    await applyNavigationDecision(router.navigate, decision)
   }
 
   function getUrlState(router: ReturnType<typeof createMemoryRouter>) {
@@ -276,6 +268,38 @@ describe('navigation-router integration: history stack & 6 scenarios', () => {
     // Native browser back from post-edit Step 4 pops history to Step 3
     await router.navigate(-1)
     expect(getUrlState(router).step).toBe(3)
+  })
+
+  it('cascades Header Back smoothly on deep-linked Step 4 across 4 -> 3 -> 2 -> 1 without prematurely popping', async () => {
+    // Fresh single-entry browser tab deep-linking directly to Step 4
+    const router = createMemoryRouter([{ path: '/pair/:campaignId', element: null }], {
+      initialEntries: [`/pair/${camp}?step=4&dishA=khao-man-gai-tom&dishB=moo-satay-10`],
+      initialIndex: 0,
+    })
+
+    expect(getUrlState(router).step).toBe(4)
+    expect(router.state.location.state).toBeNull()
+
+    // Header Back on Step 4 (deep link fallback)
+    const backFrom4 = computeBackDecision(getUrlState(router), camp, router.state.location.state)
+    expect(backFrom4.type).toBe('replace')
+    expect(backFrom4.state).toBeUndefined()
+    await applyDecision(router, backFrom4)
+    expect(getUrlState(router).step).toBe(3)
+
+    // Header Back on Step 3 must continue fallback replace cascade, NOT pop history
+    const backFrom3 = computeBackDecision(getUrlState(router), camp, router.state.location.state)
+    expect(backFrom3.type).toBe('replace')
+    expect(backFrom3.state).toBeUndefined()
+    await applyDecision(router, backFrom3)
+    expect(getUrlState(router).step).toBe(2)
+
+    // Header Back on Step 2 must continue fallback replace cascade to Step 1
+    const backFrom2 = computeBackDecision(getUrlState(router), camp, router.state.location.state)
+    expect(backFrom2.type).toBe('replace')
+    expect(backFrom2.state).toBeUndefined()
+    await applyDecision(router, backFrom2)
+    expect(getUrlState(router).step).toBe(1)
   })
 
   describe('usePairingNavigation hook integration', () => {

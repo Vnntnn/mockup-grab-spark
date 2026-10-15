@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { APPROVED_SAMPLE_PAIR } from '../data'
 import {
+  applyNavigationDecision,
   computeBackDecision,
   computeEditEntryTarget,
   computeNextStepTarget,
@@ -52,28 +53,12 @@ export function usePairingNavigation({
 
   const goToNextStep = useCallback(() => {
     const decision = computeNextStepTarget(urlState, campaignId)
-    if (decision.type === 'push' && decision.targetUrl) {
-      navigate(decision.targetUrl, {
-        state: { inJourney: true, journeyDepth: (historyState?.journeyDepth ?? 1) + 1 },
-      })
-    } else if (decision.type === 'replace' && decision.targetUrl) {
-      navigate(decision.targetUrl, {
-        replace: true,
-        state: decision.state ?? { inJourney: true },
-      })
-    }
-  }, [urlState, campaignId, historyState, navigate])
+    applyNavigationDecision(navigate, decision)
+  }, [urlState, campaignId, navigate])
 
   const goBack = useCallback(() => {
     const decision = computeBackDecision(urlState, campaignId, historyState)
-    if (decision.type === 'pop') {
-      navigate(decision.delta ?? -1)
-    } else if (decision.type === 'replace' && decision.targetUrl) {
-      navigate(decision.targetUrl, {
-        replace: true,
-        state: decision.state ?? null,
-      })
-    }
+    applyNavigationDecision(navigate, decision)
   }, [urlState, campaignId, historyState, navigate])
 
   const startEditing = useCallback(
@@ -84,12 +69,7 @@ export function usePairingNavigation({
         urlState.dishB,
         campaignId
       )
-      if (decision.targetUrl) {
-        navigate(decision.targetUrl, {
-          replace: true,
-          state: decision.state,
-        })
-      }
+      applyNavigationDecision(navigate, decision)
     },
     [urlState.dishA, urlState.dishB, campaignId, navigate]
   )
@@ -103,23 +83,27 @@ export function usePairingNavigation({
       if (nextA) query.set('dishA', nextA)
       if (nextB) query.set('dishB', nextB)
       if (urlState.isEditing) query.set('edit', 'true')
-      navigate(`/pair/${campaignId}?${query.toString()}`, {
-        replace: true,
-        state: historyState,
+      applyNavigationDecision(navigate, {
+        type: 'replace',
+        targetUrl: `/pair/${campaignId}?${query.toString()}`,
+        state: historyState ?? undefined,
       })
     },
     [urlState.step, urlState.dishA, urlState.dishB, urlState.isEditing, campaignId, historyState, navigate]
   )
 
   const goToSample = useCallback(() => {
-    navigate(
-      `/pair/${campaignId}?step=4&dishA=${APPROVED_SAMPLE_PAIR.dishASlug}&dishB=${APPROVED_SAMPLE_PAIR.dishBSlug}&sample=true`,
-      { state: { inJourney: true, journeyDepth: 2 } }
-    )
+    applyNavigationDecision(navigate, {
+      type: 'push',
+      targetUrl: `/pair/${campaignId}?step=4&dishA=${APPROVED_SAMPLE_PAIR.dishASlug}&dishB=${APPROVED_SAMPLE_PAIR.dishBSlug}&sample=true`,
+      state: { inJourney: true, journeyDepth: 2 },
+    })
   }, [campaignId, navigate])
 
   const startOver = useCallback(() => {
-    navigate(`/pair/${campaignId}?step=1`, {
+    applyNavigationDecision(navigate, {
+      type: 'push',
+      targetUrl: `/pair/${campaignId}?step=1`,
       state: { inJourney: true, journeyDepth: 1 },
     })
   }, [campaignId, navigate])
