@@ -1,34 +1,105 @@
-# GemBond — Prototype
+# GrabSpark (GemBond & GemHunter)
 
-Interactive UI prototype of a collaborative merchant-growth platform for small restaurants.
-All merchants, numbers and outcomes are **synthetic**. No backend, no real campaigns, no payments.
+Interactive frontend prototype exploring collaborative merchant growth for small, independent restaurants in Thailand.
+
+This prototype demonstrates two connected concepts:
+- **GemBond**: A partnership network where non-competing neighbourhood restaurants run shared cross-promotions without hidden advertising fees or commission clawbacks.
+- **GemHunter**: A preparatory storefront programme inside the delivery platform where merchants audit dish names, collect real photo reviews, and graduate into GemBond.
+
+All shop profiles, transaction histories, and partner responses are simulated locally in the browser. There is no remote backend, no payment processing, and no live merchant data.
+
+## Quick Start
+
+Requirements: Node.js 20+ (recommended 22+) and npm.
 
 ```bash
+# Install dependencies
 npm install
-npm run dev        # http://localhost:5173
-npm run typecheck && npm run lint && npm test && npm run build
+
+# Start local development server
+npm run dev
+
+# Run test suite, type checking, and production build
+npm test
+npm run typecheck
+npm run build
 ```
 
-Stack: React 19, TypeScript (strict), Vite, Tailwind v4, shadcn/ui (radix-nova), React Router, lucide-react.
-Fonts (IBM Plex Sans Thai) are bundled via `@fontsource`; nothing loads from a remote service.
+The application runs at `http://localhost:5173`.
 
-## Demo flow (open "เครื่องมือสาธิต" bottom-right)
-1. Dashboard → ดูแผนที่แนะนำ → read the Guided Growth Plan → สนใจและยืนยันเงื่อนไข.
-2. Status is "คุณสนใจแล้ว — รอร้านคู่ค้ายืนยัน"; แคมเปญ page shows start is blocked.
-3. Demo panel → จำลองการยืนยันจากร้านคู่ค้า (or จำลองร้านคู่ค้าขอเปลี่ยนเงื่อนไข to see consent invalidated).
-4. แคมเปญ → เริ่มแคมเปญ (enabled only when all four activation checks pass).
-5. Demo panel → จำลองการจบแคมเปญ → ผลลัพธ์.
-6. รีเซ็ตข้อมูลตัวอย่าง restores everything.
+## How the Demo Works
 
-## Layout
-- `src/domain` pure rules: `matching`, `fairness`, `consent`, `plans`, `campaign-lifecycle`, `calculations` (+ `domain.test.ts`).
-- `src/app` reducer (single source of state, persisted to localStorage), selectors, routes.
-- `src/data` synthetic merchants, templates, result series.
-- `src/features/*` screens; `src/components` shared UI (shadcn in `components/ui`).
+The interface is presented from the perspective of a small food stall owner (*ร้านหมูสะเต๊ะบ้านสวน* in central Bangkok). You can walk through both GemHunter and GemBond, using the presenter drawer (**เครื่องมือสาธิต**) to simulate customer actions and partner decisions without needing another user account.
 
-## Documentation
-- [`docs/REFINED-DESIGN-SPECIFICATION.md`](docs/REFINED-DESIGN-SPECIFICATION.md): Refined visual specification, desktop & mobile ASCII wireframes, sticky clearance mechanics, and tactical trade-off resolutions.
-- [`docs/DESIGN-EXPLORATION-REVISION.md`](docs/DESIGN-EXPLORATION-REVISION.md): Master design critique and macro-architecture documentation.
-- [`docs/superpowers/plans/2026-10-15-gembond-gemhunter-redesign.md`](docs/superpowers/plans/2026-10-15-gembond-gemhunter-redesign.md): Implemented 8-task TDD redesign plan.
-- [`docs/PRODUCT-COHERENCE.md`](docs/PRODUCT-COHERENCE.md): Complete architecture specification, handoff contract, campaign lifecycle, policy rules, and end-to-end verification report.
+### 1. GemHunter: Storefront Readiness
 
+Start at `/gemhunter`:
+1. **Invitation & Conditions**: Review the programme terms. The merchant pays zero baht, gives no mandatory discounts, and keeps normal delivery sales untouched.
+2. **Menu Audit**: Review and approve dish names. Customers see clearer titles, and prices remain identical.
+3. **Customer Discovery View**: Preview how the store looks inside the customer app.
+4. **Photo & Review Bank**: Inspect customer photos and ratings across all score tiers (1 to 5 stars).
+5. **Graduation & GemBond Handoff**: Once 10 reviews pass moderation, the store meets the criteria to unlock GemBond. Handoff is voluntary and requires explicit owner confirmation.
+
+### 2. GemBond: Collaborative Growth Plans
+
+Navigate to `/dashboard` or accept the handoff from GemHunter:
+1. **Opportunities**: Browse matched partner stores in the same district (such as *ร้านข้าวหอม*, a nearby rice dish restaurant).
+2. **Plan Inspection**: Read the prepared plan terms, financial estimates, privacy boundaries, and mutual responsibilities.
+3. **Independent Consent**: Both stores must consent to the exact same terms version. If one merchant requests a change, previous consents are invalidated and require re-confirmation.
+4. **Campaign Activation**: Campaigns only launch after four guardrails pass: dual confirmation, partner operational readiness, fairness review, and active platform standing.
+5. **Fair Ledger & Results**: When the campaign finishes, the ledger transparently separates baseline organic revenue from estimated partnership impact, showing net gain after dish costs.
+
+### Presenter Controls
+
+Click **เครื่องมือสาธิต** in the top navigation (GemHunter) or bottom corner (GemBond) to:
+- Simulate partner store confirmations or requested revisions
+- Fast-forward customer reviews and moderation
+- Advance or reset campaign lifecycles
+- Reset the prototype back to the initial state
+
+## Project Structure
+
+```text
+src/
+├── app/               # Root router, global app state reducer, and selectors
+├── components/        # Reusable presentation components, charts, and layout shells
+│   └── ui/            # Base primitives built on Radix UI and Tailwind v4
+├── data/              # Synthetic seed data for stores, menus, reviews, and past sales
+├── domain/            # Pure business logic and domain rules
+│   ├── matching.ts            # Merchant affinity and compatibility scoring
+│   ├── fairness.ts            # Fairness checks and guardrail validators
+│   ├── consent.ts             # Version-locked mutual consent state machine
+│   ├── campaign-lifecycle.ts  # Campaign phases, transitions, and handoff rules
+│   └── calculations.ts        # Margin, commission, and net benefit estimators
+├── features/          # Screen-level feature modules
+│   ├── dashboard/             # Merchant overview, action dock, and recent stats
+│   ├── growth-plans/          # Plan details, terms versioning, and consent dialog
+│   ├── partner-discovery/     # Partner matching cards and rationale
+│   ├── campaigns/             # Active campaign tracking and live progress
+│   ├── results/               # Waterfall charts, attribution, and accounting ledger
+│   ├── store-profile/         # Store operational settings and partner preferences
+│   ├── support/               # Assistance and issue reporting form
+│   └── gemhunter/             # Store audit, photo bank, discovery, and handoff
+└── styles/            # Global stylesheet, design tokens, and CSS variables
+```
+
+## Architecture and Engineering Highlights
+
+- **Pure Domain Rules**: Core business policies (matching, consent versioning, fairness, and campaign lifecycle) live in isolated pure TypeScript functions in `src/domain/`. They are tested independently without React or browser mocks.
+- **Client-Side State Machine**: Application state is managed through deterministic reducers in `src/app/reducer.ts` and `src/features/gemhunter/domain/reducer.ts`, with state persisted across browser refreshes in `localStorage`.
+- **Thai Typography & Layout Polish**: Typography is tuned for Thai script using Sarabun and IBM Plex Sans Thai, bundled locally through `@fontsource` with zero remote runtime font requests. Text containers maintain proper vertical line heights to ensure tone marks and sub-baseline vowels render without clipping.
+- **Design Token Discipline**: Styled with Tailwind CSS v4 using semantic color tokens based on Grab brand green, tinted neutral darks, and clear visual hierarchy without decorative gradients or unnecessary nesting.
+- **Automated Verification**: Over 190 automated unit and invariant walk tests cover domain logic, view adapters, and state transitions via Vitest.
+
+## Scripts
+
+- `npm run dev`: Starts the Vite development server with hot module replacement.
+- `npm run build`: Type-checks and compiles the production bundle into `dist/`.
+- `npm run typecheck`: Runs strict TypeScript compiler diagnostics without emitting files.
+- `npm run lint`: Checks source files with ESLint.
+- `npm test`: Runs the Vitest test suite.
+- `npm run preview`: Locally previews the compiled production build.
+
+## License
+
+Private prototype for demonstration and evaluation purposes.
