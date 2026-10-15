@@ -143,6 +143,36 @@ describe('Screens 1, 2, 3', () => {
       expect(html).toContain('aria-checked="true"')
     })
 
+    it('ensures index 0 receives tabIndex="0" and index 1..2 receive tabIndex="-1" when no dish is selected', () => {
+      const html = renderToString(
+        React.createElement(Screen2SelectMain, {
+          data: campData,
+          selectedSlug: null,
+          onSelect: () => {},
+        })
+      )
+      const radioTags = [...html.matchAll(/<div[^>]*role="radio"[^>]*>/g)].map((m) => m[0])
+      expect(radioTags).toHaveLength(3)
+      expect(radioTags[0]).toContain('tabindex="0"')
+      expect(radioTags[1]).toContain('tabindex="-1"')
+      expect(radioTags[2]).toContain('tabindex="-1"')
+    })
+
+    it('ensures selected dish receives tabIndex="0" and other dishes receive tabIndex="-1"', () => {
+      const html = renderToString(
+        React.createElement(Screen2SelectMain, {
+          data: campData,
+          selectedSlug: 'khao-man-gai-tod',
+          onSelect: () => {},
+        })
+      )
+      const radioTags = [...html.matchAll(/<div[^>]*role="radio"[^>]*>/g)].map((m) => m[0])
+      expect(radioTags).toHaveLength(3)
+      expect(radioTags[0]).toContain('tabindex="-1"')
+      expect(radioTags[1]).toContain('tabindex="0"')
+      expect(radioTags[2]).toContain('tabindex="-1"')
+    })
+
     it('contains zero emojis on Screen 2', () => {
       const html = renderToString(
         React.createElement(Screen2SelectMain, {
@@ -262,6 +292,40 @@ describe('Screens 1, 2, 3', () => {
       )
       expect(html).toContain('aria-checked="false"')
       expect(html).toContain('tabindex="-1"')
+    })
+
+    it('ensures index 0 receives tabIndex="0" and index 1..2 receive tabIndex="-1" when no dish is selected', () => {
+      const html = renderToString(
+        React.createElement(Screen3SelectComplement, {
+          data: campData,
+          selectedDishA: campData.menuA[0],
+          selectedSlugB: null,
+          onSelectB: () => {},
+          onEditA: () => {},
+        })
+      )
+      const radioTags = [...html.matchAll(/<div[^>]*role="radio"[^>]*>/g)].map((m) => m[0])
+      expect(radioTags).toHaveLength(3)
+      expect(radioTags[0]).toContain('tabindex="0"')
+      expect(radioTags[1]).toContain('tabindex="-1"')
+      expect(radioTags[2]).toContain('tabindex="-1"')
+    })
+
+    it('ensures selected dish receives tabIndex="0" and other dishes receive tabIndex="-1"', () => {
+      const html = renderToString(
+        React.createElement(Screen3SelectComplement, {
+          data: campData,
+          selectedDishA: campData.menuA[0],
+          selectedSlugB: 'gai-yang',
+          onSelectB: () => {},
+          onEditA: () => {},
+        })
+      )
+      const radioTags = [...html.matchAll(/<div[^>]*role="radio"[^>]*>/g)].map((m) => m[0])
+      expect(radioTags).toHaveLength(3)
+      expect(radioTags[0]).toContain('tabindex="-1"')
+      expect(radioTags[1]).toContain('tabindex="0"')
+      expect(radioTags[2]).toContain('tabindex="-1"')
     })
   })
 })

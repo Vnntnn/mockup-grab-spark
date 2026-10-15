@@ -28,14 +28,15 @@ export function Screen2SelectMain({
         aria-label={`เลือกจานหลักจาก${data.restaurantA.name}`}
         className="flex flex-col gap-3 pb-36"
       >
-        {data.menuA.map((dish) => {
+        {data.menuA.map((dish, index) => {
           const isSelected = selectedSlug === dish.slug
+          const isFocusable = isSelected || (!selectedSlug && index === 0)
           return (
             <div
               key={dish.slug}
               role="radio"
               aria-checked={isSelected}
-              tabIndex={isSelected ? 0 : -1}
+              tabIndex={isFocusable ? 0 : -1}
               onClick={() => onSelect(dish)}
               onKeyDown={(e) => {
                 if (e.key === ' ' || e.key === 'Enter') {

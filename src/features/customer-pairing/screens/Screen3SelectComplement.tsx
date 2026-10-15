@@ -30,9 +30,7 @@ export function Screen3SelectComplement({
       {selectedDishA && (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/60 px-4 py-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="font-bold text-[#00B14F] shrink-0" aria-hidden="true">
-              ✓
-            </span>
+            <Check className="size-3.5 text-[#00B14F] stroke-[3] shrink-0" aria-hidden="true" />
             <div className="truncate text-[14px] text-ink">
               {`${selectedDishA.name} ${baht(selectedDishA.priceBaht)} (${data.restaurantA.name})`}
             </div>
@@ -54,14 +52,15 @@ export function Screen3SelectComplement({
         aria-label={`เลือกของว่างจาก${data.restaurantB.name}`}
         className="flex flex-col gap-3 pb-36"
       >
-        {data.menuB.map((dish) => {
+        {data.menuB.map((dish, index) => {
           const isSelected = selectedSlugB === dish.slug
+          const isFocusable = isSelected || (!selectedSlugB && index === 0)
           return (
             <div
               key={dish.slug}
               role="radio"
               aria-checked={isSelected}
-              tabIndex={isSelected ? 0 : -1}
+              tabIndex={isFocusable ? 0 : -1}
               onClick={() => onSelectB(dish)}
               onKeyDown={(e) => {
                 if (e.key === ' ' || e.key === 'Enter') {
