@@ -25,3 +25,10 @@ Fonts (IBM Plex Sans Thai) are bundled via `@fontsource`; nothing loads from a r
 - `src/app` reducer (single source of state, persisted to localStorage), selectors, routes.
 - `src/data` synthetic merchants, templates, result series.
 - `src/features/*` screens; `src/components` shared UI (shadcn in `components/ui`).
+
+## Documentation
+- [`docs/REFINED-DESIGN-SPECIFICATION.md`](docs/REFINED-DESIGN-SPECIFICATION.md): Refined visual specification, desktop & mobile ASCII wireframes, sticky clearance mechanics, and tactical trade-off resolutions.
+- [`docs/DESIGN-EXPLORATION-REVISION.md`](docs/DESIGN-EXPLORATION-REVISION.md): Master design critique and macro-architecture documentation.
+- [`docs/superpowers/plans/2026-10-15-gembond-gemhunter-redesign.md`](docs/superpowers/plans/2026-10-15-gembond-gemhunter-redesign.md): Implemented 8-task TDD redesign plan.
+- [`docs/PRODUCT-COHERENCE.md`](docs/PRODUCT-COHERENCE.md): Complete architecture specification, handoff contract, campaign lifecycle, policy rules, and end-to-end verification report.
+

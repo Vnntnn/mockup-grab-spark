@@ -2,12 +2,12 @@ import type { ReactNode } from 'react'
 
 export function PageHeader({ title, lead, action }: { title: string; lead?: string; action?: ReactNode }) {
   return (
-    <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div className="max-w-[60ch]">
-        <h1 className="text-[26px] font-semibold text-forest md:text-[32px]">{title}</h1>
-        {lead && <p className="mt-1 text-[17px] text-muted-foreground">{lead}</p>}
+    <header className="mb-8">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-[30px] leading-tight tracking-tight text-ink md:text-[34px]">{title}</h1>
+        {action}
       </div>
-      {action}
+      {lead && <p className="mt-2 max-w-[52ch] text-[17px] text-muted-foreground">{lead}</p>}
     </header>
   )
 }

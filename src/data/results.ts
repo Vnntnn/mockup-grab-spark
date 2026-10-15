@@ -37,4 +37,15 @@ export const RESULTS_SEEDS: Record<MerchantId, ResultsSeed> = {
   },
 }
 
-export const FALLBACK_SEED = RESULTS_SEEDS['m-khaohom']
+/**
+ * Used when a partner has no results data at all. It reports zero days of data, so the calculation lands on
+ * "campaign_incomplete" (ข้อมูลยังไม่เพียงพอ) instead of borrowing another partner's numbers.
+ */
+export const NO_DATA_SEED: ResultsSeed = {
+  campaign: { orders: [0], revenueBaht: [0] },
+  reportedDays: 0,
+  clicks: 0,
+  attributedOrders: 0,
+  promotionalCostsBaht: 0,
+  comparisonGroup: null,
+}

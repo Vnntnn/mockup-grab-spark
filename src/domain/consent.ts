@@ -22,9 +22,14 @@ export function validateConsent(plan: GrowthPlan): ConsentValidation {
 
 const open = (plan: GrowthPlan) => ['awaiting', 'interested', 'ready'].includes(plan.lifecycleStatus)
 
-/** One merchant's consent only ever touches that merchant's own record. */
-export function acceptPlan(plan: GrowthPlan, merchantId: MerchantId, acks: string[], now: string): PlanResult {
+/**
+ * One merchant's consent only ever touches that merchant's own record.
+ * `reviewedVersion` is the terms version the merchant was looking at when they decided. When given, consent is refused
+ * if the plan has moved on, so a merchant can never be recorded as agreeing to terms they did not see.
+ */
+export function acceptPlan(plan: GrowthPlan, merchantId: MerchantId, acks: string[], now: string, reviewedVersion?: number): PlanResult {
   if (!plan.participatingMerchantIds.includes(merchantId)) return { ok: false, reason: 'ร้านนี้ไม่ได้อยู่ในแผน' }
+  if (reviewedVersion !== undefined && reviewedVersion !== plan.planVersion) return { ok: false, reason: 'เงื่อนไขเปลี่ยนไปแล้ว กรุณาอ่านฉบับล่าสุดก่อนยืนยัน' }
   if (!open(plan)) return { ok: false, reason: 'แผนนี้ไม่เปิดให้ยืนยันแล้ว' }
   if (plan.fairnessCheckStatus !== 'passed') return { ok: false, reason: 'แผนยังไม่ผ่านการตรวจความเป็นธรรม' }
   const consentRecords = plan.consentRecords.map((r) =>

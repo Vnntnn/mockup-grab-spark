@@ -1,35 +1,49 @@
-import { AlertTriangle, ArrowRight, BarChart3, Info, Lightbulb, Receipt, TrendingUp } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Info, MousePointerClick, ShoppingBag } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { DocSection } from '@/components/DocSection'
+import { Ledger, LedgerRow } from '@/components/Ledger'
 import { PageHeader } from '@/components/PageHeader'
-import { Panel } from '@/components/Panel'
 import { DailyBars } from '@/components/charts/DailyBars'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { WaterfallHeroBar } from '@/components/charts/WaterfallHeroBar'
+import { canShowOrderSplit } from './waterfall-helpers'
+import { EmptyArt } from '@/components/visual'
 import { Button } from '@/components/ui/button'
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { useApp } from '@/app/store'
 import { partnerOf, resultsFor, seedFor } from '@/app/selectors'
-import { campaignSeries, INSUFFICIENT_TEXT, recommendNextAction } from '@/domain/calculations'
+import { campaignSeries, INSUFFICIENT_TEXT, orderImpactBreakdown, recommendNextAction } from '@/domain/calculations'
 import { MERCHANT_BASELINE } from '@/data/results'
 import type { Campaign, CampaignResults } from '@/domain/types'
 import { baht, num, signedBaht, signedPct } from '@/lib/format'
 import { fmtRange } from '@/lib/dates'
+import { cn } from '@/lib/utils'
 
-function Compare({ label, before, after, pct, fmt, comparable }: { label: string; before: number; after: number; pct: number; fmt: (n: number) => string; comparable: boolean }) {
-  return (
-    <div className="rounded-xl border p-4">
-      <p className="text-[15px] text-muted-foreground">{label}</p>
-      <p className="mt-1 text-[15px]">ก่อนแคมเปญ <span className="font-semibold">{fmt(before)}</span></p>
-      <p className="text-[28px] leading-tight font-semibold text-forest">{fmt(after)}</p>
-      <p className="text-[15px]">ช่วงแคมเปญ · {comparable ? `เปลี่ยนไป ${signedPct(pct)}` : 'เทียบเป็นเปอร์เซ็นต์ไม่ได้'}</p>
+/** Whole orders with an explicit sign, so +38 / −5 / 0 read unambiguously. */
+const signedOrders = (n: number) => (n > 0 ? `+${num(n)}` : n < 0 ? `−${num(Math.abs(n))}` : '0')
+
+/** Before and during as two bars on one scale, with the change beside them. The bars are the comparison; the numbers are printed on them. */
+function CompareRow({ label, before, during, beforeText, duringText, change, up }: { label: string; before: number; during: number; beforeText: string; duringText: string; change: string; up?: boolean }) {
+  const max = Math.max(before, during, 1)
+  const bar = (v: number, text: string, name: string, tone: string) => (
+    <div className="flex items-center gap-3">
+      <span className="w-[5.5rem] shrink-0 text-[14px] text-muted-foreground">{name}</span>
+      <div className="h-7 flex-1">
+        <div className={cn('ease-fill flex h-full min-w-fit items-center rounded-md px-2.5 text-[15px] font-semibold tabular-nums', tone)} style={{ width: `${Math.max((v / max) * 100, 12)}%` }}>
+          {text}
+        </div>
+      </div>
     </div>
   )
-}
-
-function Line({ label, value, strong, hint }: { label: string; value: string; strong?: boolean; hint?: string }) {
   return (
-    <li className={`flex items-start justify-between gap-4 py-2.5 ${strong ? 'font-semibold' : ''}`}>
-      <span>{label}{hint && <span className="block text-[14px] font-normal text-muted-foreground">{hint}</span>}</span>
-      <span className="shrink-0 tabular-nums">{value}</span>
+    <li className="py-4">
+      <p className="mb-2 flex items-baseline justify-between gap-3">
+        <span className="font-bold">{label}</span>
+        <span className={cn('figure text-[22px]', up ? 'text-link' : 'text-ink')}>{change}</span>
+      </p>
+      <div className="flex flex-col gap-1.5">
+        {bar(before, beforeText, 'ก่อนแคมเปญ', 'bg-border text-ink')}
+        {bar(during, duringText, 'ช่วงแคมเปญ', 'bg-brand text-ink')}
+      </div>
     </li>
   )
 }
@@ -41,102 +55,169 @@ function CampaignResultsView({ campaign, r }: { campaign: Campaign; r: CampaignR
   const seed = seedFor(state, plan.id)
   const d = r.derived
   const next = recommendNextAction(r)
-  const canEstimate = d.estimatedIncrementalOrders !== null
+  const impact = orderImpactBreakdown(r)
+  const canEstimate = impact !== null
   const up = d.ordersChangePct > 0
   const comparable = d.insufficientReason === null
   const perDay = d.baselineDays !== d.campaignDays // unequal periods: show daily averages, never raw totals
   const unit = (n: number, days: number) => (perDay ? n / Math.max(days, 1) : n)
-  const dec = (n: number) => n.toFixed(1)
+  const dec = (n: number) => (Number.isInteger(n) ? num(n) : n.toFixed(1))
+  const stackable = canShowOrderSplit(impact)
+
+  // The answer, in words, built only from the computed figures. Estimates are named as estimates; nothing here is a guarantee.
+  const headline = !comparable
+    ? 'ข้อมูลยังไม่เพียงพอที่จะเทียบอย่างยุติธรรม จึงยังสรุปไม่ได้ว่าแคมเปญช่วยหรือไม่'
+    : canEstimate
+      ? `ออเดอร์เปลี่ยนไป ${signedPct(d.ordersChangePct)} ส่วนที่น่าจะมาจากแคมเปญประมาณ ${signedOrders(impact.fromCampaign)} ออเดอร์`
+      : `ออเดอร์เปลี่ยนไป ${signedPct(d.ordersChangePct)} แต่ยังไม่มีร้านเปรียบเทียบพอจะบอกว่าส่วนไหนมาจากแคมเปญ`
+
+  const ledgerOrders = canEstimate && (
+    <Ledger label="ออเดอร์ที่เปลี่ยนไปและส่วนที่น่าจะมาจากแคมเปญ">
+      <LedgerRow label="ออเดอร์ทั้งหมดที่เปลี่ยนไป" value={signedOrders(impact.observed)} hint={`นับออเดอร์ทุกช่องทางของร้าน ไม่ใช่เฉพาะที่สั่งผ่านลิงก์แคมเปญ${perDay ? ` (ปรับให้เป็น ${d.campaignDays} วันเท่ากัน)` : ''}`} />
+      <LedgerRow label="ส่วนที่คาดว่าจะเปลี่ยนอยู่แล้วแม้ไม่มีแคมเปญ" value={signedOrders(impact.expectedAnyway)} hint={`${d.comparisonLabel} เปลี่ยนไปในช่วงเดียวกัน`} />
+      <LedgerRow total label="ส่วนที่น่าจะมาจากแคมเปญ (ค่าประมาณ)" value={`ประมาณ ${signedOrders(impact.fromCampaign)}`} />
+    </Ledger>
+  )
 
   return (
-    <div className="mb-10 flex flex-col gap-5">
-      <h2 className="text-[22px] font-semibold text-forest">{plan.title} · ร่วมกับ{partner.name}</h2>
-      <p className="text-[15px] text-muted-foreground">
-        ช่วงแคมเปญ {fmtRange(r.reportingPeriod)} เทียบกับช่วงก่อนหน้า {fmtRange(r.baselinePeriod)} · ข้อมูลตัวอย่างสำหรับสาธิตระบบ
-      </p>
+    <div className="mb-16">
+      <header>
+        <h2 className="text-[17px] font-semibold text-muted-foreground">{plan.title} · ร่วมกับ{partner.name}</h2>
+        <p className="text-[14px] text-muted-foreground">
+          {fmtRange(r.reportingPeriod)} เทียบ {fmtRange(r.baselinePeriod)} · ข้อมูลตัวอย่างสำหรับสาธิตระบบ
+        </p>
+        {d.baselineBeforeEarlierCampaign && (
+          <p className="mt-1 max-w-[60ch] text-[14px] text-muted-foreground">
+            ช่วงที่เทียบคือก่อนแคมเปญแรกของร้านคุณ เพราะวันก่อนเริ่มแคมเปญนี้มีแคมเปญอื่นปนอยู่ จึงเทียบได้ไม่แม่นเท่าแคมเปญแรก
+          </p>
+        )}
+        <p className="mt-4 max-w-[34ch] text-balance text-[30px] leading-snug font-bold tracking-tight text-ink md:text-[34px]">{headline}</p>
+      </header>
 
-      <Panel title="สิ่งที่เห็นได้ตรง ๆ" icon={<BarChart3 />}>
-        <div className="mb-4 grid gap-3 sm:grid-cols-2">
-          <Compare label={perDay ? 'ออเดอร์เฉลี่ยต่อวัน' : 'ออเดอร์'} before={unit(r.orders.baseline, d.baselineDays)} after={unit(r.orders.campaign, d.campaignDays)} pct={d.ordersChangePct} fmt={perDay ? dec : num} comparable={comparable} />
-          <Compare label={perDay ? 'ยอดขายเฉลี่ยต่อวัน (ยังไม่ใช่กำไร)' : 'ยอดขาย (ยังไม่ใช่กำไร)'} before={unit(r.revenue.baseline, d.baselineDays)} after={unit(r.revenue.campaign, d.campaignDays)} pct={d.revenueChangePct} fmt={baht} comparable={comparable} />
+      {stackable && (
+        <div className="mt-6">
+          <WaterfallHeroBar baselineOrders={r.orders.campaign - impact.observed} expectedAnywayOrders={impact.expectedAnyway} estimatedFromCampaignOrders={impact.fromCampaign} />
         </div>
-        {perDay && <p className="mb-3 text-[15px] text-muted-foreground">ข้อมูลก่อนแคมเปญ {d.baselineDays} วัน และช่วงแคมเปญที่มีข้อมูล {d.campaignDays} จาก {d.periodDays} วัน จึงเทียบเป็นค่าเฉลี่ยต่อวัน</p>}
-        <DailyBars before={MERCHANT_BASELINE.orders} during={campaignSeries(seed, d.campaignDays).orders} />
-        <p className="mt-4 rounded-xl bg-sage p-3.5">
-          {!comparable
-            ? 'ข้อมูลยังไม่เพียงพอที่จะเทียบอย่างยุติธรรม จึงยังสรุปไม่ได้ว่าแคมเปญช่วยหรือไม่'
-            : up
+      )}
+
+      <DocSection id="observed" title="สิ่งที่วัดได้จริง" className="border-0 pt-0">
+        <div className="surface px-5 py-2 md:px-6">
+          <ul className="divide-y divide-border">
+            <CompareRow
+              label={perDay ? 'ออเดอร์เฉลี่ยต่อวัน' : 'ออเดอร์รวม'}
+              before={unit(r.orders.baseline, d.baselineDays)}
+              during={unit(r.orders.campaign, d.campaignDays)}
+              beforeText={dec(unit(r.orders.baseline, d.baselineDays))}
+              duringText={dec(unit(r.orders.campaign, d.campaignDays))}
+              change={comparable ? signedPct(d.ordersChangePct) : 'เทียบไม่ได้'}
+              up={comparable && up}
+            />
+            <CompareRow
+              label={perDay ? 'ยอดขายเฉลี่ยต่อวัน (ก่อนหักต้นทุน)' : 'ยอดขายรวม (ก่อนหักต้นทุน)'}
+              before={unit(r.revenue.baseline, d.baselineDays)}
+              during={unit(r.revenue.campaign, d.campaignDays)}
+              beforeText={baht(unit(r.revenue.baseline, d.baselineDays))}
+              duringText={baht(unit(r.revenue.campaign, d.campaignDays))}
+              change={comparable ? signedPct(d.revenueChangePct) : 'เทียบไม่ได้'}
+              up={comparable && d.revenueChangePct > 0}
+            />
+            <li className="flex flex-wrap items-center gap-x-6 gap-y-1 py-4">
+              <span className="flex items-center gap-2"><MousePointerClick className="size-5 text-muted-foreground" aria-hidden="true" />กดลิงก์ <strong className="figure">{num(r.attributableClicks)}</strong> ครั้ง</span>
+              <span className="flex items-center gap-2"><ShoppingBag className="size-5 text-muted-foreground" aria-hidden="true" />สั่งผ่านลิงก์ <strong className="figure">{num(r.attributedOrders)}</strong> ออเดอร์ ({d.clickToOrderPct.toFixed(1)}% ของการกด)</span>
+            </li>
+          </ul>
+        </div>
+
+        {perDay && (
+          <p className="mt-3 text-[14px] text-muted-foreground">
+            ก่อนแคมเปญ {d.baselineDays} วัน ช่วงแคมเปญมีข้อมูล {d.campaignDays} จาก {d.periodDays} วัน จึงเทียบเป็นค่าเฉลี่ยต่อวัน
+          </p>
+        )}
+
+        <details className="mt-4 border-t border-border pt-1">
+          <summary className="flex min-h-11 cursor-pointer items-center text-[15px] font-semibold text-link hover:underline">
+            ดูกราฟยอดสั่งซื้อรายวัน
+          </summary>
+          <div className="pt-4">
+            <DailyBars before={MERCHANT_BASELINE.orders} during={campaignSeries(seed, d.campaignDays).orders} />
+          </div>
+        </details>
+
+        {comparable && (
+          <p className="mt-5 max-w-[60ch] font-semibold text-ink">
+            {up
               ? 'ยอดสั่งซื้อเพิ่มขึ้นเมื่อเทียบกับช่วงก่อนหน้า แต่ยังสรุปไม่ได้ว่าการเพิ่มขึ้นทั้งหมดเกิดจากแคมเปญ'
               : 'ยอดสั่งซื้อไม่ได้เพิ่มขึ้นเมื่อเทียบกับช่วงก่อนหน้า ซึ่งอาจมีเหตุอื่นร่วมด้วย จึงยังสรุปเรื่องแคมเปญไม่ได้'}
-        </p>
-      </Panel>
+          </p>
+        )}
+        <p className="mt-1 text-[14px] text-muted-foreground">การกดลิงก์ไม่ใช่การซื้อ และบางคนที่สั่งผ่านลิงก์อาจสั่งอยู่แล้วแม้ไม่มีแคมเปญ</p>
+      </DocSection>
 
-      <Panel title="ส่วนที่น่าจะมาจากแคมเปญ" icon={<TrendingUp />}>
+      <DocSection id="incremental" title="ส่วนที่น่าจะมาจากแคมเปญ (ค่าประมาณ)">
         {canEstimate ? (
           <>
-            <ul className="divide-y">
-              <Line label="ออเดอร์ที่เพิ่มขึ้นจริง" value={`${r.orders.campaign >= d.baselineOrdersScaled ? '+' : '−'}${num(Math.abs(r.orders.campaign - d.baselineOrdersScaled))}`} hint={perDay ? `ช่วงแคมเปญลบช่วงก่อนหน้า (ปรับให้เป็น ${d.campaignDays} วันเท่ากัน)` : 'ช่วงแคมเปญลบช่วงก่อนหน้า'} />
-              <Line label="ที่คาดว่าจะเพิ่มอยู่แล้วแม้ไม่มีแคมเปญ" value={`${d.expectedOrders! - d.baselineOrdersScaled >= 0 ? '+' : ''}${num(d.expectedOrders! - d.baselineOrdersScaled)}`} hint={`${d.comparisonLabel} เปลี่ยนไปในช่วงเดียวกัน`} />
-              <Line strong label="ส่วนที่น่าจะมาจากแคมเปญ (ค่าประมาณ)" value={`ประมาณ ${num(d.estimatedIncrementalOrders!)} ออเดอร์`} />
-            </ul>
-            <p className="mt-3 text-[15px] text-muted-foreground">เป็นค่าประมาณ ไม่ใช่ค่าที่ยืนยันได้ ร้านที่นำมาเทียบอาจไม่เหมือนร้านคุณทุกอย่าง</p>
+            <details className="mt-1" open={!stackable}>
+              <summary className="flex min-h-11 cursor-pointer items-center text-[15px] font-medium text-link">ดูวิธีคำนวณ</summary>
+              {ledgerOrders}
+            </details>
+            <p className="mt-2 text-[14px] text-muted-foreground">เป็นค่าประมาณ ไม่ใช่ค่าที่ยืนยันได้ ร้านที่นำมาเทียบอาจไม่เหมือนร้านคุณทุกอย่าง</p>
           </>
         ) : (
-          <Alert className="border-saffron/50 bg-saffron-soft text-saffron-ink">
-            <AlertTriangle aria-hidden="true" />
-            <AlertTitle className="text-[16px]">ข้อมูลยังไม่เพียงพอ</AlertTitle>
-            <AlertDescription className="text-[15px] text-saffron-ink/90">
-              {d.insufficientReason ? INSUFFICIENT_TEXT[d.insufficientReason] : 'ยังไม่มีกลุ่มร้านเปรียบเทียบ'} เราจึงไม่ประมาณส่วนที่มาจากแคมเปญ ดูได้แค่ตัวเลขที่เห็นจริงด้านบน
-            </AlertDescription>
-          </Alert>
+          <div className="flex gap-3 rounded-xl bg-warn-soft p-4">
+            <AlertTriangle className="mt-1 size-5 shrink-0 text-warn" aria-hidden="true" />
+            <div>
+              <p className="font-bold">ข้อมูลยังไม่เพียงพอ</p>
+              <p>{d.insufficientReason ? INSUFFICIENT_TEXT[d.insufficientReason] : 'ยังไม่มีกลุ่มร้านเปรียบเทียบ'} เราจึงไม่ประมาณส่วนที่มาจากแคมเปญ ดูได้แค่ตัวเลขที่เห็นจริงด้านบน</p>
+            </div>
+          </div>
         )}
-        <div className="mt-5 rounded-xl border p-4">
-          <p className="mb-1 font-semibold">คนที่กดลิงก์แคมเปญ</p>
-          <p>กดลิงก์ {num(r.attributableClicks)} ครั้ง · สั่งซื้อผ่านลิงก์ {num(r.attributedOrders)} ออเดอร์ ({d.clickToOrderPct.toFixed(1)}% ของคนที่กด)</p>
-          <p className="mt-1 text-[15px] text-muted-foreground">การกดลิงก์ไม่ใช่การซื้อ และบางคนที่สั่งผ่านลิงก์อาจสั่งอยู่แล้วแม้ไม่มีแคมเปญ</p>
-        </div>
-      </Panel>
+      </DocSection>
 
-      <Panel title="กำไร ไม่ใช่แค่ยอดขาย" icon={<Receipt />}>
+      <DocSection id="profit" title="การประเมินกำไรสุทธิ">
         {d.contribution !== null && d.incrementalContribution !== null ? (
           <>
-            <ul className="divide-y">
-              <Line label="ยอดขายช่วงแคมเปญ" value={baht(r.revenue.campaign)} />
-              <Line label="หัก ต้นทุนวัตถุดิบและบรรจุภัณฑ์โดยประมาณ" value={`− ${baht(r.relevantVariableCosts ?? 0)}`} hint={`ตามที่คุณระบุไว้ ${state.variableCostPct}% ของยอดขาย`} />
-              <Line label="หัก ค่าใช้จ่ายของแคมเปญ" value={`− ${baht(r.promotionalCosts)}`} />
-              <Line strong label="ส่วนที่เหลือช่วงแคมเปญ" value={baht(d.contribution)} />
-              <Line label="หัก ส่วนที่เหลือที่คาดว่าจะได้อยู่แล้วถ้าไม่มีแคมเปญ" value={`− ${baht(d.expectedBaselineContribution ?? 0)}`} />
-              <Line strong label="ผลต่างที่น่าจะมาจากแคมเปญ (ค่าประมาณ)" value={signedBaht(d.incrementalContribution)} />
-            </ul>
-            <p className="mt-3 text-[15px] text-muted-foreground">รวม: ต้นทุนวัตถุดิบ/บรรจุภัณฑ์ตามที่ร้านประมาณ และค่าใช้จ่ายแคมเปญ ไม่รวม: ค่าแรง ค่าเช่า ค่าธรรมเนียมแพลตฟอร์มปกติ และภาษี</p>
+            <div className="surface px-5 py-3 md:px-6">
+              <Ledger label="จากยอดขายถึงผลต่างที่น่าจะมาจากแคมเปญ">
+                <LedgerRow label="ยอดขายช่วงแคมเปญ" value={baht(r.revenue.campaign)} />
+                <LedgerRow label="หัก ต้นทุนวัตถุดิบและบรรจุภัณฑ์โดยประมาณ" value={`− ${baht(r.relevantVariableCosts ?? 0)}`} hint={`ตามที่คุณระบุไว้ ${state.variableCostPct}% ของยอดขาย`} />
+                <LedgerRow label="หัก ค่าใช้จ่ายของแคมเปญ" value={`− ${baht(r.promotionalCosts)}`} />
+                <LedgerRow strong label="ส่วนที่เหลือช่วงแคมเปญ" value={baht(d.contribution)} />
+                <LedgerRow label="หัก ส่วนที่คาดว่าจะได้อยู่แล้วถ้าไม่มีแคมเปญ" value={`− ${baht(d.expectedBaselineContribution ?? 0)}`} />
+                <LedgerRow total label="ผลต่างที่น่าจะมาจากแคมเปญ (ค่าประมาณ)" value={signedBaht(d.incrementalContribution)} />
+              </Ledger>
+            </div>
+            <p className="mt-3 max-w-[64ch] text-[14px] text-muted-foreground">รวม: ต้นทุนวัตถุดิบ/บรรจุภัณฑ์ตามที่ร้านประมาณ และค่าใช้จ่ายแคมเปญ ไม่รวม: ค่าแรง ค่าเช่า ค่าธรรมเนียมแพลตฟอร์มปกติ และภาษี</p>
           </>
         ) : (
-          <Alert className="border-saffron/50 bg-saffron-soft text-saffron-ink">
-            <Info aria-hidden="true" />
-            <AlertTitle className="text-[16px]">ข้อมูลยังไม่เพียงพอสำหรับการประเมินกำไร</AlertTitle>
-            <AlertDescription className="text-[15px] text-saffron-ink/90">
-              {d.insufficientReason
-                ? `${INSUFFICIENT_TEXT[d.insufficientReason]} `
-                : d.contribution === null
-                  ? 'คุณยังไม่ได้ใส่ต้นทุนโดยประมาณ (ไม่บังคับ) '
-                  : 'ยังไม่มีกลุ่มร้านเปรียบเทียบที่จะประมาณส่วนต่าง '}
-              {!d.insufficientReason && d.contribution === null && <Link to="/store" className="underline">ใส่ได้ที่หน้า "ร้านของฉัน"</Link>}
-            </AlertDescription>
-          </Alert>
+          <div className="flex gap-3 rounded-xl bg-warn-soft p-4">
+            <Info className="mt-1 size-5 shrink-0 text-warn" aria-hidden="true" />
+            <div>
+              <p className="font-bold">ข้อมูลยังไม่เพียงพอสำหรับการประเมินกำไร</p>
+              <p>
+                {d.insufficientReason
+                  ? `${INSUFFICIENT_TEXT[d.insufficientReason]} `
+                  : d.contribution === null
+                    ? 'คุณยังไม่ได้ใส่ต้นทุนโดยประมาณ (ไม่บังคับ) '
+                    : 'ยังไม่มีกลุ่มร้านเปรียบเทียบที่จะประมาณส่วนต่าง '}
+                {!d.insufficientReason && d.contribution === null && <Link to="/store" className="underline">ใส่ได้ที่หน้า "ร้านของฉัน"</Link>}
+              </p>
+            </div>
+          </div>
         )}
-      </Panel>
+      </DocSection>
 
-      <Panel title="ถ้าจะทำอะไรต่อ" icon={<Lightbulb />} className="ring-2 ring-emerald-700/25">
-        <p className="text-[18px] font-semibold text-forest">{next.title}</p>
-        <p className="mt-1">{next.body}</p>
-        <p className="mt-3 text-[15px] text-muted-foreground">นี่เป็นคำแนะนำตามเงื่อนไขของตัวเลขเท่านั้น ไม่รับประกันผล คุณเป็นผู้ตัดสินใจเสมอ</p>
-        <Button asChild variant={next.kind === 'add_costs' ? 'default' : 'outline'} className="mt-4 h-12 text-[16px]">
+      <DocSection id="strategy" title="ก้าวถัดไป">
+        <p className="text-[22px] leading-snug font-bold text-ink">{next.title}</p>
+        <p className="mt-2 max-w-[56ch] text-[17px]">{next.body}</p>
+        <p className="mt-2 text-[14px] text-muted-foreground">คำแนะนำตามตัวเลขเท่านั้น ไม่รับประกันผล คุณเป็นผู้ตัดสินใจเสมอ</p>
+        <Button asChild variant={next.kind === 'add_costs' ? 'default' : 'outline'} className="mt-4 h-12 text-[17px] font-bold">
           <Link to={next.kind === 'add_costs' ? '/store' : '/opportunities'}>
-            {next.kind === 'add_costs' ? 'ไปใส่ต้นทุนโดยประมาณ' : 'ดูแผนที่แนะนำ'}
+            {next.kind === 'add_costs' ? 'ใส่ต้นทุนโดยประมาณ' : 'ดูร้านที่น่าสนใจอื่น ๆ'}
             <ArrowRight data-icon="inline-end" />
           </Link>
         </Button>
-      </Panel>
+      </DocSection>
+
     </div>
   )
 }
@@ -148,22 +229,16 @@ export function Results() {
   const active = camps.find((c) => c.status === 'active')
   return (
     <>
-      <PageHeader title="ผลลัพธ์" lead="ดูว่าแคมเปญช่วยร้านคุณได้แค่ไหน แยกให้ชัดระหว่างสิ่งที่เห็น กับสิ่งที่น่าจะมาจากแคมเปญ" />
-      <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-saffron-soft px-3 py-1.5 text-[14px] font-medium text-saffron-ink">
-        <Info className="size-4" aria-hidden="true" />
-        ข้อมูลตัวอย่างสำหรับสาธิตระบบ
-      </p>
+      <PageHeader title="ผลลัพธ์" lead="แยกสิ่งที่เห็น ออกจากสิ่งที่น่าจะมาจากแคมเปญ" />
       {done.length > 0 ? (
         done.map((c) => <CampaignResultsView key={c.id} campaign={c} r={resultsFor(state, c)!} />)
       ) : (
-        <Empty className="rounded-2xl border bg-card">
+        <Empty className="surface">
           <EmptyHeader>
-            <EmptyMedia variant="icon"><BarChart3 /></EmptyMedia>
-            <EmptyTitle className="text-[20px]">{active ? 'แคมเปญยังไม่จบ' : 'ยังไม่มีผลลัพธ์ให้ดู'}</EmptyTitle>
-            <EmptyDescription className="text-[16px]">
-              {active
-                ? 'เมื่อแคมเปญจบ เราจะสรุปให้ที่นี่ โดยไม่ตีความผลก่อนเวลา เพราะข้อมูลระหว่างทางยังไม่พอจะบอกว่าคุ้มหรือไม่'
-                : 'ยังไม่มีแคมเปญที่จบ ซึ่งเป็นเรื่องปกติ เมื่อคุณเข้าร่วมและแคมเปญจบ ผลจะมาแสดงที่นี่'}
+            <EmptyArt className="mx-auto" />
+            <EmptyTitle className="text-[22px]">{active ? 'แคมเปญยังไม่จบ' : 'ยังไม่มีผลลัพธ์'}</EmptyTitle>
+            <EmptyDescription className="text-[17px]">
+              {active ? 'เมื่อแคมเปญจบ เราจะสรุปให้ที่นี่ ข้อมูลระหว่างทางยังไม่พอจะบอกว่าคุ้มหรือไม่' : 'เมื่อมีแคมเปญที่จบ ผลจะมาแสดงที่นี่ ซึ่งเป็นเรื่องปกติ'}
             </EmptyDescription>
           </EmptyHeader>
           <Button asChild variant="outline" className="h-11 text-[15px]"><Link to={active ? '/campaigns' : '/opportunities'}>{active ? 'ดูแคมเปญ' : 'ดูแผนที่แนะนำ'}</Link></Button>

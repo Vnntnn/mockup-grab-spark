@@ -247,6 +247,8 @@ export interface CampaignResults {
     baselineDays: number
     campaignDays: number
     periodDays: number
+    /** True when the baseline data ends before the day this campaign started because an earlier campaign ran in between. The baseline is then the history before the FIRST campaign, not the days just before this one. */
+    baselineBeforeEarlierCampaign: boolean
     insufficientReason: InsufficientReason | null
     ordersChangePct: number
     revenueChangePct: number

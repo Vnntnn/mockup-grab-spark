@@ -1,4 +1,4 @@
-import { MERCHANT_BASELINE, RESULTS_SEEDS, FALLBACK_SEED } from '@/data/results'
+import { MERCHANT_BASELINE, RESULTS_SEEDS, NO_DATA_SEED } from '@/data/results'
 import { getEligiblePartners, type MatchingOutcome } from '@/domain/matching'
 import { calculateCampaignResults, campaignSeries } from '@/domain/calculations'
 import type { AppState, Campaign, CampaignResults, GrowthPlan, Merchant, PlanLifecycle } from '@/domain/types'
@@ -41,13 +41,16 @@ export const campaignPlans = (s: AppState) =>
   )
 
 export const seedFor = (s: AppState, planId: string) =>
-  RESULTS_SEEDS[s.plans[planId].participatingMerchantIds[1]] ?? FALLBACK_SEED
+  RESULTS_SEEDS[s.plans[planId].participatingMerchantIds[1]] ?? NO_DATA_SEED
 
 export function resultsFor(s: AppState, campaign: Campaign): CampaignResults | null {
   if (campaign.status !== 'completed') return null
   const plan = s.plans[campaign.planId]
   const seed = seedFor(s, plan.id)
-  return calculateCampaignResults(seed, MERCHANT_BASELINE, campaign, s.variableCostPct)
+  // MERCHANT_BASELINE is the merchant's history before their FIRST campaign. A later campaign must not label it as the days just before it.
+  const starts = Object.values(s.campaigns).flatMap((c) => (c.startDate ? [c.startDate] : []))
+  const firstStart = starts.length ? starts.reduce((a, b) => (a < b ? a : b)) : undefined
+  return calculateCampaignResults(seed, MERCHANT_BASELINE, campaign, s.variableCostPct, firstStart)
 }
 
 export interface ActivityItem {
@@ -89,7 +92,10 @@ export function deriveActivity(s: AppState): ActivityItem[] {
     } else if (p.lifecycleStatus === 'interested') {
       out.push({ id: `${p.id}-wait`, at: p.updatedAt, text: `${partner.name} ยังไม่ได้ยืนยัน แผนจึงยังไม่เริ่ม`, href, tone: 'wait' })
     }
-    if (p.lifecycleStatus === 'ready') out.push({ id: `${p.id}-ready`, at: p.updatedAt, text: 'ร้านทั้งสองยืนยันแล้ว กดเริ่มแคมเปญได้', href: '/campaigns', tone: 'info' })
+    if (p.lifecycleStatus === 'ready') {
+      const otherRunning = Object.values(s.campaigns).some((c) => c.status === 'active' && c.planId !== p.id)
+      out.push({ id: `${p.id}-ready`, at: p.updatedAt, text: otherRunning ? 'ร้านทั้งสองยืนยันแล้ว เริ่มได้เมื่อแคมเปญที่กำลังดำเนินการจบ' : 'ร้านทั้งสองยืนยันแล้ว กดเริ่มแคมเปญได้', href: '/campaigns', tone: 'info' })
+    }
     if (camp.status === 'active' && camp.startDate) out.push({ id: `${p.id}-active`, at: camp.startDate, text: `แคมเปญกับ${partner.name} กำลังดำเนินการ ถึง ${fmtFull(camp.endDate ?? camp.startDate)}`, href: '/campaigns', tone: 'good' })
     if (camp.status === 'completed') out.push({ id: `${p.id}-done`, at: p.updatedAt, text: `แคมเปญกับ${partner.name} เสร็จสิ้น ดูผลลัพธ์ได้แล้ว`, href: '/results', tone: 'good' })
     if (camp.status === 'cancelled') out.push({ id: `${p.id}-cancel`, at: p.updatedAt, text: `แผนกับ${partner.name} ถูกยกเลิก ไม่มีผลต่อการขายปกติ`, href, tone: 'quiet' })
@@ -108,7 +114,10 @@ const total = (a: number[]) => a.reduce((x, y) => x + y, 0)
 
 /** Dashboard figures. One shared 7-day history; after a COMPLETE campaign it shows that campaign's 7 days instead. */
 export function recentPeriod(s: AppState): RecentPeriod {
-  const done = Object.values(s.campaigns).find((c) => c.status === 'completed' && c.startDate && c.endDate)
+  // the most recently finished campaign (not simply the first one stored)
+  const done = Object.values(s.campaigns)
+    .filter((c) => c.status === 'completed' && c.startDate && c.endDate)
+    .sort((a, b) => b.endDate!.localeCompare(a.endDate!))[0]
   if (done) {
     const seed = seedFor(s, done.planId)
     const days = s.plans[done.planId].durationDays
@@ -116,8 +125,11 @@ export function recentPeriod(s: AppState): RecentPeriod {
       const cur = campaignSeries(seed, days)
       return { label: `${days} วันของแคมเปญล่าสุด`, range: { start: done.startDate!, end: done.endDate! }, orders: total(cur.orders), revenue: total(cur.revenueBaht) }
     }
-    const start = addDays(done.startDate!, -MERCHANT_BASELINE.orders.length)
-    return { label: '7 วันก่อนเริ่มแคมเปญล่าสุด (ข้อมูลช่วงแคมเปญยังมาไม่ครบ)', range: { start, end: addDays(done.startDate!, -1) }, orders: total(MERCHANT_BASELINE.orders), revenue: total(MERCHANT_BASELINE.revenueBaht) }
+    // MERCHANT_BASELINE is the history before the FIRST campaign, so that is the period to name, even when a later campaign is the latest
+    const starts = Object.values(s.campaigns).flatMap((c) => (c.startDate ? [c.startDate] : []))
+    const anchor = starts.reduce((a, b) => (a < b ? a : b), done.startDate!)
+    const start = addDays(anchor, -MERCHANT_BASELINE.orders.length)
+    return { label: '7 วันก่อนแคมเปญแรก (ข้อมูลช่วงแคมเปญล่าสุดยังมาไม่ครบ)', range: { start, end: addDays(anchor, -1) }, orders: total(MERCHANT_BASELINE.orders), revenue: total(MERCHANT_BASELINE.revenueBaht) }
   }
   return {
     label: '7 วันล่าสุดก่อนมีแคมเปญ',

@@ -14,7 +14,7 @@ import { addDays } from '@/lib/dates'
 export const STATE_VERSION = 2
 
 export type Action =
-  | { type: 'accept'; planId: string; acks: string[] }
+  | { type: 'accept'; planId: string; acks: string[]; reviewedVersion?: number }
   | { type: 'decline'; planId: string }
   | { type: 'reopen'; planId: string }
   | { type: 'activate'; planId: string }
@@ -70,7 +70,7 @@ export function reduce(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'accept': {
       if (!plan) return state
-      const r = acceptPlan(plan, selfId, action.acks, today)
+      const r = acceptPlan(plan, selfId, action.acks, today, action.reviewedVersion)
       return r.ok ? commit(state, r.plan) : state
     }
     case 'decline': {
@@ -86,7 +86,7 @@ export function reduce(state: AppState, action: Action): AppState {
     }
     case 'activate': {
       if (!plan) return state
-      const r = activateCampaign(plan, state.campaigns[plan.id], Object.values(state.merchants), today)
+      const r = activateCampaign(plan, state.campaigns[plan.id], Object.values(state.merchants), today, Object.values(state.campaigns))
       return r.ok ? { ...state, plans: { ...state.plans, [plan.id]: r.plan }, campaigns: { ...state.campaigns, [plan.id]: r.campaign } } : state
     }
     case 'cancel': {

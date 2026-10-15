@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { Lock, ShieldCheck } from 'lucide-react'
+import { Check, Store } from 'lucide-react'
 import { PageHeader } from '@/components/PageHeader'
-import { Panel } from '@/components/Panel'
-import { ResetButton } from '@/components/layout/ResetButton'
 import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -16,6 +14,21 @@ import { matching, selfOf } from '@/app/selectors'
 import { PREFERENCE_LABEL, READINESS_LABEL } from '@/lib/copy'
 import type { ParticipationPreference, ReadinessStatus } from '@/domain/types'
 
+/** Half-hour choices in 24-hour time (the native time input follows the browser's locale and shows AM/PM in a Thai screen). */
+const HALF_HOURS = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`)
+const timeOptions = (current: string) => (HALF_HOURS.includes(current) ? HALF_HOURS : [...HALF_HOURS, current].sort())
+
+function TimeSelect({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger id={id} className="w-full text-[17px] data-[size=default]:h-12"><SelectValue>{value} น.</SelectValue></SelectTrigger>
+      <SelectContent>
+        <SelectGroup>{timeOptions(value).map((t) => <SelectItem key={t} value={t} className="min-h-11 text-[17px]">{t} น.</SelectItem>)}</SelectGroup>
+      </SelectContent>
+    </Select>
+  )
+}
+
 export function StoreProfile() {
   const { state, dispatch } = useApp()
   const me = selfOf(state)
@@ -27,23 +40,31 @@ export function StoreProfile() {
 
   return (
     <>
-      <PageHeader title="ร้านของฉัน" lead="ข้อมูลสั้น ๆ ที่ใช้เลือกร้านที่เหมาะกับคุณ แก้แล้วบันทึกให้อัตโนมัติ" />
-      <p className="mb-6 rounded-xl bg-sage p-3.5 text-[15px]">ตอนนี้มีร้านที่แนะนำให้คุณ {recCount} ร้าน จะเปลี่ยนไปตามข้อมูลด้านล่าง</p>
+      <PageHeader title="ร้านของฉัน" />
 
-      <div className="flex flex-col gap-6">
-        <Panel title="ข้อมูลร้าน">
+      <p className="surface mb-8 flex items-center gap-3 px-5 py-4 text-[17px]" role="status">
+        <Store className="size-6 shrink-0 text-link" aria-hidden="true" />
+        <span>ร้านที่เหมาะกับคุณตอนนี้ <strong className="figure text-[22px]">{recCount}</strong> ร้าน<span className="block text-[14px] text-muted-foreground">อัปเดตทันทีเมื่อแก้ข้อมูลด้านล่าง</span></span>
+      </p>
+
+      <div className="flex flex-col gap-12">
+        {/* Section 1: ข้อมูลร้าน */}
+        <section aria-labelledby="section-profile" className="border-t border-border pt-8">
+          <h2 id="section-profile" className="mb-4 text-[22px] font-bold text-ink">
+            ข้อมูลร้านและเวลาทำการ
+          </h2>
           <FieldGroup>
             <Field>
               <FieldLabel>ชื่อร้าน</FieldLabel>
-              <p className="text-[17px]">{me.name}</p>
+              <p className="text-[17px] font-medium text-foreground">{me.name}</p>
               <FieldDescription>{me.category} · ร้านตัวอย่างสำหรับสาธิต</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="area">ย่านที่ให้บริการ</FieldLabel>
               <Select value={me.neighborhood} onValueChange={(v) => patch({ neighborhood: v })}>
-                <SelectTrigger id="area" className="w-full text-[16px] data-[size=default]:h-12"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="area" className="w-full text-[17px] data-[size=default]:h-12"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectGroup>{Object.values(AREAS).map((a) => <SelectItem key={a} value={a} className="min-h-11 text-[16px]">{a}</SelectItem>)}</SelectGroup>
+                  <SelectGroup>{Object.values(AREAS).map((a) => <SelectItem key={a} value={a} className="min-h-11 text-[17px]">{a}</SelectItem>)}</SelectGroup>
                 </SelectContent>
               </Select>
             </Field>
@@ -52,11 +73,11 @@ export function StoreProfile() {
               <div className="grid grid-cols-2 gap-3">
                 <Field>
                   <FieldLabel htmlFor="open">เปิด</FieldLabel>
-                  <Input id="open" type="time" className="h-12 text-[16px]" value={me.operatingHours.open} onChange={(e) => e.target.value && patch({ operatingHours: { ...me.operatingHours, open: e.target.value } })} />
+                  <TimeSelect id="open" value={me.operatingHours.open} onChange={(v) => patch({ operatingHours: { ...me.operatingHours, open: v } })} />
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="close">ปิด</FieldLabel>
-                  <Input id="close" type="time" className="h-12 text-[16px]" value={me.operatingHours.close} onChange={(e) => e.target.value && patch({ operatingHours: { ...me.operatingHours, close: e.target.value } })} />
+                  <TimeSelect id="close" value={me.operatingHours.close} onChange={(v) => patch({ operatingHours: { ...me.operatingHours, close: v } })} />
                 </Field>
               </div>
             </FieldSet>
@@ -71,22 +92,31 @@ export function StoreProfile() {
                 onValueChange={(v) => patch({ menuCategories: v })}
                 aria-label="หมวดเมนูที่ขาย"
               >
-                {MENU_CATEGORY_OPTIONS.map((c) => <ToggleGroupItem key={c} value={c} className="h-11 px-4 text-[15px]">{c}</ToggleGroupItem>)}
+                {MENU_CATEGORY_OPTIONS.map((c) => (
+                  <ToggleGroupItem key={c} value={c} className="h-11 gap-1.5 px-4 text-[15px] data-[state=on]:border-ink data-[state=on]:bg-brand data-[state=on]:font-bold data-[state=on]:text-ink">
+                    {me.menuCategories.includes(c) && <Check className="size-4" strokeWidth={3} aria-hidden="true" />}
+                    {c}
+                  </ToggleGroupItem>
+                ))}
               </ToggleGroup>
               {me.menuCategories.length === 0 && <FieldError>เลือกอย่างน้อย 1 หมวด เพื่อให้เราจับคู่ร้านได้</FieldError>}
             </FieldSet>
           </FieldGroup>
-        </Panel>
+        </section>
 
-        <Panel title="ความพร้อมและความสนใจ">
+        {/* Section 2: ความพร้อมและความสนใจ */}
+        <section aria-labelledby="section-readiness" className="border-t border-border pt-8">
+          <h2 id="section-readiness" className="mb-4 text-[22px] font-bold text-ink">
+            ความพร้อมและความสนใจ
+          </h2>
           <FieldGroup>
             <FieldSet>
               <FieldLegend variant="label">ความพร้อมของร้าน</FieldLegend>
               <RadioGroup value={me.readinessStatus} onValueChange={(v) => patch({ readinessStatus: v as ReadinessStatus })}>
                 {(Object.keys(READINESS_LABEL) as ReadinessStatus[]).map((k) => (
                   <div key={k} className="flex min-h-11 items-center gap-3">
-                    <RadioGroupItem value={k} id={`r-${k}`} className="size-5" />
-                    <Label htmlFor={`r-${k}`} className="flex min-h-11 flex-1 items-center text-[16px] font-normal">{READINESS_LABEL[k]}</Label>
+                    <RadioGroupItem value={k} id={`r-${k}`} aria-label={READINESS_LABEL[k]} className="size-5" />
+                    <Label htmlFor={`r-${k}`} className="flex min-h-11 flex-1 items-center text-[17px] font-normal">{READINESS_LABEL[k]}</Label>
                   </div>
                 ))}
               </RadioGroup>
@@ -96,33 +126,31 @@ export function StoreProfile() {
               <RadioGroup value={me.participationPreference} onValueChange={(v) => patch({ participationPreference: v as ParticipationPreference })}>
                 {(Object.keys(PREFERENCE_LABEL) as ParticipationPreference[]).map((k) => (
                   <div key={k} className="flex min-h-11 items-center gap-3">
-                    <RadioGroupItem value={k} id={`p-${k}`} className="size-5" />
-                    <Label htmlFor={`p-${k}`} className="flex min-h-11 flex-1 items-center text-[16px] font-normal">{PREFERENCE_LABEL[k]}</Label>
+                    <RadioGroupItem value={k} id={`p-${k}`} aria-label={PREFERENCE_LABEL[k]} className="size-5" />
+                    <Label htmlFor={`p-${k}`} className="flex min-h-11 flex-1 items-center text-[17px] font-normal">{PREFERENCE_LABEL[k]}</Label>
                   </div>
                 ))}
               </RadioGroup>
-              <FieldDescription>เลือก "ยังไม่ต้องการตอนนี้" แล้วเราจะไม่แนะนำแผนใหม่ให้ ไม่มีผลต่อการขายปกติ</FieldDescription>
+              <FieldDescription>เลือก "ยังไม่ต้องการตอนนี้" เราจะไม่แนะนำแผนใหม่ ไม่มีผลต่อการขายปกติ</FieldDescription>
             </FieldSet>
           </FieldGroup>
-        </Panel>
+        </section>
 
-        <Panel title="ข้อกำหนดที่ GemBond ตั้งให้ร้านคุณเสมอ" icon={<Lock />}>
-          <ul className="flex flex-col gap-2">
-            {['ไม่บังคับให้ลดราคา', 'ไม่บังคับแบ่งยอดขายให้ร้านอื่น', 'ไม่มีค่าใช้จ่ายที่ไม่บอกล่วงหน้า', 'เปลี่ยนเงื่อนไขสำคัญต้องขอยืนยันใหม่'].map((t) => (
-              <li key={t} className="flex items-start gap-3"><ShieldCheck className="mt-1 size-5 shrink-0 text-success" aria-hidden="true" />{t}</li>
-            ))}
-          </ul>
-          <p className="mt-3 text-[15px] text-muted-foreground">ข้อเหล่านี้ใช้กับทุกแผน ปรับลดไม่ได้ในต้นแบบนี้</p>
-        </Panel>
-
-        <Panel title="ต้นทุนโดยประมาณ (ไม่บังคับ)">
+        {/* Section 3: ต้นทุนโดยประมาณ */}
+        <section aria-labelledby="section-cost" className="border-t border-border pt-8">
+          <h2 id="section-cost" className="mb-2 text-[22px] font-bold text-ink">
+            ต้นทุนโดยประมาณ (ไม่บังคับ)
+          </h2>
+          <p className="mb-4 max-w-[64ch] text-[15px] text-muted-foreground">
+            ใช้ประเมินกำไรในหน้า "ผลลัพธ์" เท่านั้น เก็บในเครื่องนี้ ไม่แชร์ให้ร้านคู่ค้า
+          </p>
           <Field data-invalid={costInvalid}>
             <FieldLabel htmlFor="cost">ต้นทุนวัตถุดิบและบรรจุภัณฑ์ คิดเป็นกี่ % ของยอดขาย</FieldLabel>
             <div className="flex items-center gap-3">
               <Input
                 id="cost"
                 inputMode="decimal"
-                className="h-12 max-w-40 text-[16px]"
+                className="h-12 max-w-40 text-[17px] tabular-nums"
                 aria-invalid={costInvalid}
                 placeholder="เช่น 38"
                 value={costText}
@@ -133,22 +161,17 @@ export function StoreProfile() {
                   else if (!Number.isNaN(n) && n >= 0 && n <= 100) dispatch({ type: 'setVariableCostPct', value: n })
                 }}
               />
-              <span>%</span>
+              <span className="font-semibold">%</span>
               {costText !== '' && <Button variant="outline" className="h-11 text-[15px]" onClick={() => { setCostText(''); dispatch({ type: 'setVariableCostPct', value: null }) }}>ล้างค่า</Button>}
             </div>
             {costInvalid && <FieldError>ใส่ตัวเลข 0 ถึง 100</FieldError>}
-            <FieldDescription>
-              ใช้คำนวณกำไรโดยประมาณที่หน้า "ผลลัพธ์" เท่านั้น เก็บไว้ในเครื่องนี้ และไม่แชร์ให้ร้านคู่ค้า ถ้าไม่ใส่ เราจะบอกว่า "ข้อมูลยังไม่เพียงพอสำหรับการประเมินกำไร" แทนการเดา
-            </FieldDescription>
           </Field>
-        </Panel>
+        </section>
 
-        <Panel title="สถานะการขายของร้านคุณ" icon={<ShieldCheck />}>
-          <p>การขายตามปกติ: <strong>ปกติ</strong></p>
-          <p className="mt-1 text-[15px] text-muted-foreground">การปฏิเสธหรือยกเลิกแผนของ GemBond ไม่เปลี่ยนสถานะนี้ และไม่ลดสิทธิการขายตามปกติของร้านคุณ</p>
-        </Panel>
-
-        <div><ResetButton /></div>
+        <p className="flex flex-wrap items-center gap-x-3 border-t border-border pt-8 text-[17px]">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-link"><Check className="size-4" aria-hidden="true" />การขายปกติ: ปกติ</span>
+          <span className="text-muted-foreground">การปฏิเสธหรือยกเลิกแผนของ GemBond ไม่เปลี่ยนสถานะการขายของร้านคุณ</span>
+        </p>
       </div>
     </>
   )

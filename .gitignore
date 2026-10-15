@@ -24,18 +24,26 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
-# AI assistant files
+# AI assistant and agent files
 CLAUDE.md
 Audit.md
 AGENTS.md
 GEMINI.md
 .claude/
+.codex/
+.gemini/
 .agents/
 .cursor/
 .cursorrules
 .github/copilot-instructions.md
 .mcp.json
-docs/superpowers/
+.impeccable/
+.superpowers/
+
+# Documentation and vibe files
+docs/
+DESIGN.md
+PRODUCT.md
 
 # cloudflare
 .wrangler

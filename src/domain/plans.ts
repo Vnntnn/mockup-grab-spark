@@ -136,22 +136,26 @@ export function generateGrowthPlan(
   return refreshPlan(plan, today)
 }
 
-/** Sum of what the merchant must pay. null if any line is unresolved. */
+/** Sum of what the merchant must pay. null if any line is unresolved or the merchant has no cost terms at all. */
 export function totalCommitmentBaht(plan: GrowthPlan, merchantId: MerchantId): number | null {
-  const lines = plan.costTermsByMerchant[merchantId]?.lines ?? []
-  if (lines.some((l) => l.amountBaht === null)) return null
-  return lines.reduce((s, l) => s + (l.amountBaht ?? 0), 0)
+  const terms = plan.costTermsByMerchant[merchantId]
+  if (!terms) return null // missing terms are unknown, not zero
+  if (terms.lines.some((l) => l.amountBaht === null)) return null
+  return terms.lines.reduce((s, l) => s + (l.amountBaht ?? 0), 0)
 }
 
 /** Terms whose change requires every party to consent again. */
 const materialSnapshot = (p: GrowthPlan) =>
   JSON.stringify([
+    p.campaignTemplateId,
     p.durationDays,
     p.costTermsByMerchant,
     p.discountTerms,
     p.revenueSharingTerms,
     p.dataPermissions,
     p.responsibilitiesByMerchant,
+    p.cancellationTerms,
+    p.safeguards,
   ])
 
 export const isMaterialChange = (a: GrowthPlan, b: GrowthPlan) => materialSnapshot(a) !== materialSnapshot(b)
@@ -172,6 +176,9 @@ export function applyTermsChange(
     return { ok: false, reason: 'เงื่อนไขที่ตกลงแล้วไม่สามารถถูกแก้ฝ่ายเดียว' }
   }
   const next = { ...plan, ...patch }
+  if (patch.durationDays !== undefined && !(Number.isInteger(patch.durationDays) && patch.durationDays >= 1)) {
+    return { ok: false, reason: 'ระยะเวลาแคมเปญต้องเป็นจำนวนวันตั้งแต่ 1 วันขึ้นไป' }
+  }
   if (!isMaterialChange(plan, next)) return { ok: true, plan }
   const version = plan.planVersion + 1
   const updated: GrowthPlan = {

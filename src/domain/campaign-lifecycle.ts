@@ -40,8 +40,12 @@ export function syncCampaign(plan: GrowthPlan, campaign: Campaign): Campaign {
   }
 }
 
-/** The four conditions that must all hold before a campaign may become Active. */
-export function checkActivation(plan: GrowthPlan, merchants: Merchant[]): ActivationCheck[] {
+/**
+ * The four conditions that must all hold before a campaign may become Active.
+ * `running` = the merchant's other campaigns that are Active right now. A fifth check appears only when one exists: two campaigns
+ * running together would count the same orders in both reports, so the second waits for the first to finish.
+ */
+export function checkActivation(plan: GrowthPlan, merchants: Merchant[], running: Campaign[] = []): ActivationCheck[] {
   const consent = validateConsent(plan)
   const names = (ids: string[]) => ids.map((id) => merchants.find((m) => m.id === id)?.name ?? id).join(', ')
   const stale = consent.staleVersion.length > 0
@@ -49,7 +53,8 @@ export function checkActivation(plan: GrowthPlan, merchants: Merchant[]): Activa
   const notReady = merchants.filter(
     (m) => plan.participatingMerchantIds.includes(m.id) && (m.readinessStatus === 'not_ready' || m.policyStatus !== 'clear'),
   )
-  return [
+  const others = running.filter((c) => c.status === 'active' && c.planId !== plan.id)
+  const checks: ActivationCheck[] = [
     {
       id: 'all-consented',
       label: 'ร้านทั้งสองฝ่ายยืนยันแล้ว',
@@ -79,15 +84,23 @@ export function checkActivation(plan: GrowthPlan, merchants: Merchant[]): Activa
           : 'ไม่มีค่าใช้จ่ายค้างและทุกร้านพร้อม',
     },
   ]
+  if (others.length)
+    checks.push({
+      id: 'one-at-a-time',
+      label: 'ไม่มีแคมเปญอื่นของร้านคุณที่กำลังดำเนินการ',
+      passed: false,
+      detail: 'มีแคมเปญอื่นกำลังดำเนินการอยู่ เริ่มอันนี้ได้เมื่ออันนั้นจบหรือยกเลิก เพื่อไม่ให้นับออเดอร์ซ้ำสองแคมเปญ',
+    })
+  return checks
 }
 
 export type TransitionResult =
   | { ok: true; plan: GrowthPlan; campaign: Campaign }
   | { ok: false; reasons: string[] }
 
-export function activateCampaign(plan: GrowthPlan, campaign: Campaign, merchants: Merchant[], today: string): TransitionResult {
+export function activateCampaign(plan: GrowthPlan, campaign: Campaign, merchants: Merchant[], today: string, running: Campaign[] = []): TransitionResult {
   if (plan.lifecycleStatus !== 'ready') return { ok: false, reasons: ['แผนยังไม่อยู่ในสถานะพร้อมเริ่ม'] }
-  const failed = checkActivation(plan, merchants).filter((c) => !c.passed)
+  const failed = checkActivation(plan, merchants, running).filter((c) => !c.passed)
   if (failed.length) return { ok: false, reasons: failed.map((f) => f.label) }
   return {
     ok: true,

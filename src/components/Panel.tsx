@@ -16,11 +16,11 @@ export function Panel({
   id?: string
 }) {
   return (
-    <Card id={id} className={cn('gap-4 rounded-2xl text-[16px] [--card-spacing:--spacing(5)] md:[--card-spacing:--spacing(6)]', className)}>
+    <Card id={id} className={cn('gap-4 rounded-2xl text-[17px] [--card-spacing:--spacing(5)] md:[--card-spacing:--spacing(6)]', className)}>
       {title && (
         <CardHeader>
-          <CardTitle className="flex items-center gap-2.5 text-[20px] leading-snug font-semibold text-forest">
-            {icon && <span className="text-emerald-700 [&_svg]:size-6">{icon}</span>}
+          <CardTitle className="flex items-center gap-2.5 text-[22px] leading-snug font-bold text-ink">
+            {icon && <span className="text-link [&_svg]:size-6">{icon}</span>}
             {title}
           </CardTitle>
         </CardHeader>

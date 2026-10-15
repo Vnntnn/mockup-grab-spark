@@ -4,6 +4,8 @@ import type { PlanLifecycle, SupportCategoryId } from '@/domain/types'
 export const DEMO_NOTE =
   'ต้นแบบสาธิต: ร้าน ข้อมูล และตัวเลขทั้งหมดเป็นข้อมูลตัวอย่าง ไม่ได้เชื่อมต่อบัญชีร้านจริง และไม่ได้เริ่มแคมเปญจริง'
 
+export const DEMO_NOTE_SHORT = 'ข้อมูลตัวอย่างเพื่อสาธิต ไม่ได้เชื่อมต่อบัญชีร้านจริง'
+
 export const STATUS: Record<PlanLifecycle, { label: string; icon: LucideIcon; tone: 'neutral' | 'wait' | 'good' | 'quiet' }> = {
   awaiting: { label: 'รอการตัดสินใจจากร้านของคุณ', icon: CircleDashed, tone: 'neutral' },
   interested: { label: 'คุณสนใจแล้ว — รอร้านคู่ค้ายืนยัน', icon: Clock, tone: 'wait' },

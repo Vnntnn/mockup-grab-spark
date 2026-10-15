@@ -7,28 +7,38 @@ import type { FairnessCheck, FairnessReport, GrowthPlan } from './types'
 export function validateGrowthPlan(plan: GrowthPlan): FairnessReport {
   const [selfId] = plan.participatingMerchantIds
   const lines = plan.costTermsByMerchant[selfId]?.lines ?? []
+  // Every party's cost terms must be present. Absent terms are "cannot verify" (unresolved), never "no cost".
+  const missingTerms = plan.participatingMerchantIds.filter((id) => !plan.costTermsByMerchant[id])
+  const allLines = plan.participatingMerchantIds.flatMap((id) => plan.costTermsByMerchant[id]?.lines ?? [])
   const checks: FairnessCheck[] = []
+
+  // A discount or revenue share can also be expressed as a cost line charged to the small merchant. That is the same
+  // forced obligation under another name, so it is checked here too, however well it is "explained".
+  const chargedToSelf = (lineId: string) => lines.some((l) => l.id === lineId && l.payer === 'smallMerchant' && (l.amountBaht ?? 0) > 0)
+  const forcedDiscount = plan.discountTerms.requiredFromSmallMerchant || chargedToSelf('discount')
+  const forcedShare = plan.revenueSharingTerms.mandatory || chargedToSelf('revshare')
 
   checks.push({
     id: 'no-forced-discount',
     label: 'ไม่บังคับให้ร้านเล็กลดราคา',
-    status: plan.discountTerms.requiredFromSmallMerchant ? 'fail' : 'pass',
-    detail: plan.discountTerms.requiredFromSmallMerchant ? 'แผนนี้กำหนดให้ลดราคา' : 'ร้านคุณกำหนดราคาเอง',
+    status: forcedDiscount ? 'fail' : 'pass',
+    detail: forcedDiscount ? 'แผนนี้กำหนดให้ลดราคา' : 'ร้านคุณกำหนดราคาเอง',
   })
   checks.push({
     id: 'no-revenue-sharing',
     label: 'ไม่บังคับแบ่งยอดขาย',
-    status: plan.revenueSharingTerms.mandatory ? 'fail' : 'pass',
-    detail: plan.revenueSharingTerms.mandatory ? 'แผนนี้กำหนดให้แบ่งยอดขาย' : 'ยอดขายเป็นของแต่ละร้าน',
+    status: forcedShare ? 'fail' : 'pass',
+    detail: forcedShare ? 'แผนนี้กำหนดให้แบ่งยอดขาย' : 'ยอดขายเป็นของแต่ละร้าน',
   })
 
-  const unresolved = lines.filter((l) => l.amountBaht === null)
-  const undisclosed = lines.filter((l) => l.amountBaht !== null && l.amountBaht > 0 && (!l.trigger || !l.cap))
+  const unresolved = allLines.filter((l) => l.amountBaht === null)
+  const undisclosed = allLines.filter((l) => l.amountBaht !== null && l.amountBaht > 0 && (!l.trigger || !l.cap))
+  const unknown = unresolved.length > 0 || missingTerms.length > 0
   checks.push({
     id: 'costs-explained',
     label: 'ค่าใช้จ่ายทุกข้อระบุชัดเจน',
-    status: unresolved.length ? 'unresolved' : undisclosed.length ? 'fail' : 'pass',
-    detail: unresolved.length
+    status: unknown ? 'unresolved' : undisclosed.length ? 'fail' : 'pass',
+    detail: unknown
       ? 'มีค่าใช้จ่ายที่ยังไม่ทราบจำนวน จึงยังไม่ถือว่าอนุมัติ'
       : undisclosed.length
         ? 'มีค่าใช้จ่ายที่ไม่ระบุเงื่อนไขการจ่ายหรือเพดาน'

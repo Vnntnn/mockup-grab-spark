@@ -95,6 +95,8 @@ const PREFERENCE = { open: 1, selective: 0.7, not_now: 0 } as const
 export function checkEligibility(self: Merchant, other: Merchant): FailedRule[] {
   const failed: FailedRule[] = []
   if (!pairingFor(self.category, other.category)) failed.push({ id: 'complementarity', label: 'หมวดอาหารไม่เสริมกัน' })
+  // Complementary shops must not sell the same thing: overlapping menu categories would make them compete (cannibalisation).
+  if (self.menuCategories.some((c) => other.menuCategories.includes(c))) failed.push({ id: 'menu_overlap', label: 'เมนูของสองร้านซ้อนกัน' })
   if (proximity(self.neighborhood, other.neighborhood) === 0) failed.push({ id: 'proximity', label: 'อยู่ไกลกันเกินไป' })
   if (hoursOverlapMinutes(self.operatingHours, other.operatingHours) < MIN_OVERLAP_MINUTES)
     failed.push({ id: 'hours', label: 'เวลาเปิดขายซ้อนกันน้อยเกินไป' })

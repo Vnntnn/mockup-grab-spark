@@ -22,29 +22,51 @@ export function ConsentDialog({ open, onOpenChange, plan, partnerName, onConfirm
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setChecked(false) }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[20px]">ยืนยันเงื่อนไขฉบับที่ {plan.planVersion}</DialogTitle>
-          <DialogDescription className="text-[16px]">ทวนอีกครั้งก่อนกดยืนยัน คุณยังเปลี่ยนใจได้ภายหลังก่อนแคมเปญเริ่ม</DialogDescription>
+          <DialogTitle className="text-[22px]">ยืนยันเงื่อนไขฉบับที่ {plan.planVersion}</DialogTitle>
+          <DialogDescription className="text-[15px]">ทวนอีกครั้งก่อนกดยืนยัน คุณยังเปลี่ยนใจได้ภายหลังก่อนแคมเปญเริ่ม</DialogDescription>
         </DialogHeader>
-        <ul className="flex flex-col gap-2 rounded-xl bg-sage p-4 text-[16px]">
-          <li>ค่าใช้จ่ายเพิ่มของร้านคุณ: <strong>{total === null ? 'ยังไม่ทราบ' : baht(total)}</strong> (ข้อสมมุติของแผนตัวอย่าง)</li>
-          <li>{plan.discountTerms.requiredFromSmallMerchant ? 'ต้องลดราคา' : 'ไม่ต้องลดราคา ร้านคุณกำหนดราคาเอง'}</li>
-          <li>{plan.revenueSharingTerms.mandatory ? 'ต้องแบ่งยอดขาย' : 'ไม่ต้องแบ่งยอดขายให้ร้านคู่ค้า'}</li>
-          <li>ระยะเวลา {plan.durationDays} วัน ยกเลิกได้โดยไม่มีค่าปรับ</li>
-        </ul>
-        <div className="flex items-start gap-3">
-          <Checkbox id="ack" checked={checked} onCheckedChange={(v) => setChecked(v === true)} className="mt-1 size-6" />
-          <Label htmlFor="ack" className="text-[16px] leading-relaxed font-normal">
-            ฉันอ่านค่าใช้จ่าย ข้อมูลที่ร้านคู่ค้าเห็น และสิทธิของร้านแล้ว
+
+        {/* Clean section without nested card */}
+        <div className="my-2 border-y border-border py-4">
+          <span className="block text-[14px] text-muted-foreground">ข้อผูกพันทางการเงินของร้านคุณ:</span>
+          <p className="text-[30px] font-bold text-ink tabular-nums figure my-1">
+            {total === null ? 'ยังไม่ทราบ' : baht(total)}
+          </p>
+          <ul className="mt-3 space-y-2 text-[15px] text-ink">
+            <li className="flex items-center gap-2.5">
+              <span className="size-2 shrink-0 rounded-full bg-link" />
+              <span>{plan.discountTerms.requiredFromSmallMerchant ? 'ต้องลดราคา' : 'ไม่ต้องลดราคา ร้านคุณกำหนดราคาเอง 100%'}</span>
+            </li>
+            <li className="flex items-center gap-2.5">
+              <span className="size-2 shrink-0 rounded-full bg-link" />
+              <span>{plan.revenueSharingTerms.mandatory ? 'ต้องแบ่งยอดขาย' : 'ไม่ต้องแบ่งยอดขายให้ร้านคู่ค้า'}</span>
+            </li>
+            <li className="flex items-center gap-2.5">
+              <span className="size-2 shrink-0 rounded-full bg-link" />
+              <span>ระยะเวลา {plan.durationDays} วัน ยกเลิกได้ตลอดเวลาโดยไม่มีค่าปรับ</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Checkbox without redundant card container */}
+        <div className="flex items-start gap-3 py-1">
+          <Checkbox id="ack" checked={checked} onCheckedChange={(v) => setChecked(v === true)} className="mt-1 size-5" />
+          <Label htmlFor="ack" className="flex-1 cursor-pointer text-[15px] leading-relaxed font-medium text-ink">
+            ฉันอ่านค่าใช้จ่าย ข้อมูลที่ร้านคู่ค้าเห็น และสิทธิการยกเลิกแล้ว
           </Label>
         </div>
-        <p className="text-[15px] text-muted-foreground">
+
+        <p className="text-[14px] text-muted-foreground">
           นี่เป็นการยืนยันของร้านคุณเท่านั้น แคมเปญจะยังไม่เริ่มจนกว่า{partnerName}จะยืนยันเงื่อนไขฉบับเดียวกัน
         </p>
-        <DialogFooter>
-          <Button variant="outline" className="h-12 text-[16px]" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             กลับไปอ่านต่อ
           </Button>
-          <Button className="h-12 text-[16px]" disabled={!checked} onClick={() => { onConfirm([...ACKS]); setChecked(false) }}>
+          <Button
+            disabled={!checked}
+            onClick={() => { onConfirm([...ACKS]); setChecked(false) }}
+          >
             สนใจและยืนยันเงื่อนไข
           </Button>
         </DialogFooter>

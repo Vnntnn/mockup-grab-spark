@@ -1,26 +1,36 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource/ibm-plex-sans-thai/thai-400.css";
-@import "@fontsource/ibm-plex-sans-thai/thai-500.css";
-@import "@fontsource/ibm-plex-sans-thai/thai-600.css";
-@import "@fontsource/ibm-plex-sans-thai/thai-700.css";
-@import "@fontsource/ibm-plex-sans-thai/latin-400.css";
-@import "@fontsource/ibm-plex-sans-thai/latin-500.css";
-@import "@fontsource/ibm-plex-sans-thai/latin-600.css";
-@import "@fontsource/ibm-plex-sans-thai/latin-700.css";
+@import "@fontsource/sarabun/thai-400.css";
+@import "@fontsource/sarabun/thai-500.css";
+@import "@fontsource/sarabun/thai-600.css";
+@import "@fontsource/sarabun/thai-700.css";
+@import "@fontsource/sarabun/latin-400.css";
+@import "@fontsource/sarabun/latin-500.css";
+@import "@fontsource/sarabun/latin-600.css";
+@import "@fontsource/sarabun/latin-700.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'IBM Plex Sans Thai', 'Noto Sans Thai', 'Sarabun', system-ui, sans-serif;
+    --font-heading: var(--display);
+    --font-display: var(--display);
+    --font-sans: 'Sarabun', 'Noto Sans Thai', system-ui, sans-serif;
+    --color-chilli: var(--chilli);
+    --color-ink: var(--ink);
+    --color-rule: var(--rule);
+    --color-desk: var(--desk);
     --color-forest: var(--forest);
     --color-sage: var(--sage);
     --color-sage-strong: var(--sage-strong);
     --color-saffron: var(--saffron);
     --color-saffron-soft: var(--saffron-soft);
     --color-saffron-ink: var(--saffron-ink);
+    --color-brand: var(--brand);
+    --color-link: var(--link);
+    --color-warn: var(--warn);
+    --color-warn-text: var(--warn-text);
+    --color-warn-soft: var(--warn-soft);
     --color-success: var(--success);
     --color-success-soft: var(--success-soft);
     --color-danger-soft: var(--danger-soft);
@@ -64,70 +74,239 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* GemBond tokens. Light only: the audience reads this in a bright shop. */
+/*
+ * Palette comes from the supplied brand sheet: green #00B14F, black, white, charcoal. No Grab logo or wordmark; the gem mark is GemBond's own.
+ * #00B14F is 7.4:1 against black and 2.8:1 against white, so it is only ever a fill that carries black text,
+ * or a mark next to words. Green used AS text on white is --link (#007A38, 5.5:1).
+ * One family (Sarabun) at three weights. Light only: read in a bright shop, on a phone, between orders.
+ */
 :root {
-    --background: #f3f5ef;
-    --foreground: #17221d;
+    --display: 'Sarabun', 'Noto Sans Thai', system-ui, sans-serif;
+    --background: #f4f6f4;
+    --foreground: #161616;
     --card: #ffffff;
-    --card-foreground: #17221d;
+    --card-foreground: #161616;
     --popover: #ffffff;
-    --popover-foreground: #17221d;
-    --primary: #14513c;
-    --primary-foreground: #ffffff;
-    --secondary: #e4ece1;
-    --secondary-foreground: #0f3d2e;
-    --muted: #e9efe6;
-    --muted-foreground: #53605a;
-    --accent: #e4ece1;
-    --accent-foreground: #0f3d2e;
-    --destructive: #a3321f;
-    --border: #d5dcd1;
-    --input: #b9c4b5;
-    --ring: #1c6e4e;
-    --chart-1: #14513c;
-    --chart-2: #b4c9ae;
-    --chart-3: #e0a528;
-    --chart-4: #53605a;
-    --chart-5: #a3321f;
-    --radius: 0.875rem;
-    --sidebar: #0f3d2e;
-    --sidebar-foreground: #e4ece1;
-    --sidebar-primary: #e0a528;
-    --sidebar-primary-foreground: #0f3d2e;
-    --sidebar-accent: #14513c;
+    --popover-foreground: #161616;
+    --primary: #00b14f;
+    --primary-foreground: #0a0a0a;
+    --secondary: #f1f3f1;
+    --secondary-foreground: #161616;
+    --muted: #f1f3f1;
+    --muted-foreground: #545b55;
+    --accent: #e3f6ea;
+    --accent-foreground: #161616;
+    --destructive: #b3261e;
+    --border: #dde2dd;
+    --input: #858d86;
+    --ring: #161616;
+    --chart-1: #161616;
+    --chart-2: #c9d0c9;
+    --chart-3: #00b14f;
+    --chart-4: #545b55;
+    --chart-5: #b3261e;
+    --radius: 0.625rem;
+    --shadow-raise: 0 1px 2px rgb(22 36 28 / 0.06), 0 10px 28px -14px rgb(22 36 28 / 0.18);
+    --shadow-lift: 0 2px 4px rgb(22 36 28 / 0.06), 0 18px 34px -14px rgb(22 36 28 / 0.26);
+    --shadow-edge: 0 1px 0 rgb(22 36 28 / 0.04), 0 6px 14px -12px rgb(22 36 28 / 0.28);
+    /*
+     * Motion tokens. Each has one job:
+     *   instant  press feedback, colour or opacity changes the finger or cursor causes
+     *   micro    hover, focus, toggle, selection
+     *   standard expand/collapse, tabs, a card leaving a list
+     *   overlay  dialogs and drawers opening (closing is faster, see the overlay rules)
+     *   route    a screen settling in after navigation (opacity and a few pixels only)
+     *   progress a meter or track easing to a value that has just changed
+     * ease-out decelerates into rest (things entering or responding); ease-inout is for things that move between two resting places.
+     */
+    --dur-instant: 90ms;
+    --dur-micro: 150ms;
+    --dur-standard: 220ms;
+    --dur-overlay: 240ms;
+    --dur-route: 240ms;
+    --dur-progress: 600ms;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-inout: cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar: #161616;
+    --sidebar-foreground: #f1f3f1;
+    --sidebar-primary: #00b14f;
+    --sidebar-primary-foreground: #0a0a0a;
+    --sidebar-accent: #2a2a2a;
     --sidebar-accent-foreground: #ffffff;
-    --sidebar-border: #1d5a45;
-    --sidebar-ring: #e0a528;
-    --forest: #0f3d2e;
-    --sage: #eef3ec;
-    --sage-strong: #cddcc8;
-    --saffron: #e0a528;
-    --saffron-soft: #fbefcf;
-    --saffron-ink: #6b4700;
-    --success: #1c6e4e;
-    --success-soft: #dff0e6;
-    --danger-soft: #fbe4de;
+    --sidebar-border: #3a3a3a;
+    --sidebar-ring: #00b14f;
+    --forest: #161616;
+    --ink: #161616;
+    --desk: #f4f6f4;
+    --rule: #c9d0c9;
+    --sage: #f1f3f1;
+    --sage-strong: #c9d0c9;
+    --brand: #00b14f;
+    --link: #007a38;
+    --saffron: #00b14f;
+    --saffron-soft: #e3f6ea;
+    --saffron-ink: #0a0a0a;
+    --warn: #8a5a00;
+    --warn-text: #6b4300;
+    --warn-soft: #fff3d6;
+    --chilli: #b3261e;
+    --success: #007a38;
+    --success-soft: #e3f6ea;
+    --danger-soft: #fbe4e1;
+}
+
+/*
+ * GemHunter host platform: a food feed. Same palette, a little rounder, food and photos carry the colour.
+ * Scoped to .host-platform, which HostShell also puts on <html> while mounted so portalled dialogs and sheets match.
+ */
+.host-platform {
+    --background: #f4f6f4;
+    --radius: 1rem;
+    --secondary: #ebeeeb;
+    --muted: #ebeeeb;
+    --border: #d9dfd9;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+    scrollbar-width: thin;
+    scrollbar-color: var(--input) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--input);
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+  ::selection {
+    background-color: var(--brand);
+    color: #0a0a0a;
+  }
   body {
     @apply bg-background text-foreground;
-    }
+  }
   html {
     @apply font-sans;
-    font-size: 16px;
-    }
+  }
   body {
     font-size: 1.0625rem;
-    line-height: 1.7;
+    line-height: 1.75;
     -webkit-font-smoothing: antialiased;
-    }
-  h1, h2, h3 { line-height: 1.35; letter-spacing: 0; }
-  :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+    caret-color: var(--ink);
+  }
+  h1, h2, h3, h4 {
+    line-height: 1.35;
+    text-wrap: balance;
+  }
+  h1 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  a:not([class]) {
+    color: var(--link);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* the black demo bar: a white ring, since the global black ring would vanish on it */
+  .on-ink :focus-visible {
+    outline: 2px solid #ffffff !important;
+    outline-offset: 2px;
+    box-shadow: none !important;
+  }
+  /* reduced motion: state changes stay (colour, shape, text), movement goes. Tokens collapse so every consumer follows. */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    :root, .host-platform {
+      --dur-instant: 0.01ms;
+      --dur-micro: 0.01ms;
+      --dur-standard: 0.01ms;
+      --dur-overlay: 0.01ms;
+      --dur-route: 0.01ms;
+      --dur-progress: 0.01ms;
+    }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
+}
+
+@layer components {
+  /* the one container: a raised white surface. Depth is a hairline plus one soft shadow; nothing nests inside another surface */
+  .surface,
+  .sheet {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-raise);
+  }
+  /* a surface that can be pressed: lifts a little on hover, settles on press */
+  .pressable {
+    transition: transform var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out), background-color var(--dur-micro);
+  }
+  .pressable:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lift);
+  }
+  .pressable:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-raise);
+  }
+  .figure {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    font-weight: 700;
+  }
+  /* the one entrance: a screen settles in when the route changes. Opacity and 4px, nothing staggers. */
+  .rise {
+    animation: rise var(--dur-route) var(--ease-out) backwards;
+  }
+  /* progress that changes: widths and fills ease to their new value */
+  .ease-fill {
+    transition: width var(--dur-progress) var(--ease-out), transform var(--dur-progress) var(--ease-out), background-color var(--dur-standard);
+  }
+  /* a step that has just been completed */
+  .pop {
+    animation: pop var(--dur-standard) var(--ease-out) both;
+  }
+  /* a mark of something already agreed: green wash, black text, an icon beside it in markup */
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.75rem;
+    border-radius: 9999px;
+    background: var(--accent);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+  /* mobile clearance to prevent keyboard and dock occlusion */
+  .scroll-safe {
+    scroll-margin-bottom: 160px;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes pop {
+  from {
+    transform: scale(0.8);
+    opacity: 0.4;
   }
 }

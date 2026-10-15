@@ -8,6 +8,8 @@ import type { AppState } from './types'
 export function checkInvariants(s: AppState): string[] {
   const bad: string[] = []
   if (s.sellingStatus !== 'normal') bad.push('selling status changed')
+  const running = Object.values(s.campaigns).filter((c) => c.status === 'active')
+  if (running.length > 1) bad.push(`more than one active campaign: ${running.map((c) => c.id).join(', ')}`)
   for (const p of Object.values(s.plans)) {
     const tag = p.id
     const camp = s.campaigns[p.id]

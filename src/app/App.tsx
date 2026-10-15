@@ -7,6 +7,8 @@ import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty'
 import { Campaigns } from '@/features/campaigns/Campaigns'
 import { Dashboard } from '@/features/dashboard/Dashboard'
 import { PlanDetail } from '@/features/growth-plans/PlanDetail'
+import { GemHunterProvider } from '@/features/gemhunter/store'
+import { GemHunterRoutes } from '@/features/gemhunter/routes'
 import { PlansList } from '@/features/growth-plans/PlansList'
 import { Opportunities } from '@/features/partner-discovery/Opportunities'
 import { Results } from '@/features/results/Results'
@@ -20,9 +22,9 @@ function NotFound() {
       <PageHeader title="ไม่พบหน้านี้" />
       <Empty className="rounded-2xl border bg-card">
         <EmptyHeader>
-          <EmptyDescription className="text-[16px]">ลิงก์อาจไม่ถูกต้อง กลับไปหน้าภาพรวมได้เลย</EmptyDescription>
+          <EmptyDescription className="text-[17px]">ลิงก์อาจไม่ถูกต้อง กลับไปหน้าภาพรวมได้เลย</EmptyDescription>
         </EmptyHeader>
-        <Button asChild className="h-12 text-[16px]"><Link to="/dashboard">กลับไปภาพรวม</Link></Button>
+        <Button asChild className="h-12 text-[17px]"><Link to="/dashboard">กลับไปภาพรวม</Link></Button>
       </Empty>
     </>
   )
@@ -40,9 +42,10 @@ class Boundary extends Component<{ children: ReactNode }, { failed: boolean }> {
         <h1 className="mb-2 text-2xl font-semibold">มีบางอย่างผิดพลาด</h1>
         <p className="mb-4">ข้อมูลตัวอย่างอาจไม่ถูกต้อง ลองรีเซ็ตข้อมูลตัวอย่าง</p>
         <Button
-          className="h-12 text-[16px]"
+          className="h-12 text-[17px]"
           onClick={() => {
             try { localStorage.removeItem('gembond.demo.v1') } catch { /* ignore */ }
+            try { localStorage.removeItem('gembond.gemhunter.v1') } catch { /* ignore */ }
             location.assign('/dashboard')
           }}
         >
@@ -57,22 +60,26 @@ export function App() {
   return (
     <Boundary>
       <AppProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AppShell />}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/opportunities" element={<Opportunities />} />
-              <Route path="/plans" element={<PlansList />} />
-              <Route path="/plans/:planId" element={<PlanDetail />} />
-              <Route path="/campaigns" element={<Campaigns />} />
-              <Route path="/results" element={<Results />} />
-              <Route path="/store" element={<StoreProfile />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+        <GemHunterProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* GemHunter lives in its own host-platform shell, outside the GemBond AppShell */}
+              <Route path="/gemhunter/*" element={<GemHunterRoutes />} />
+              <Route element={<AppShell />}>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/opportunities" element={<Opportunities />} />
+                <Route path="/plans" element={<PlansList />} />
+                <Route path="/plans/:planId" element={<PlanDetail />} />
+                <Route path="/campaigns" element={<Campaigns />} />
+                <Route path="/results" element={<Results />} />
+                <Route path="/store" element={<StoreProfile />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </GemHunterProvider>
       </AppProvider>
     </Boundary>
   )

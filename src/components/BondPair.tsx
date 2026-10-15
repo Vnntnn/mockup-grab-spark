@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock } from 'lucide-react'
+import { CheckCircle2, Clock, Handshake } from 'lucide-react'
 import { Gem } from './GemMark'
 import { cn } from '@/lib/utils'
 import { initial } from '@/lib/format'
@@ -6,19 +6,17 @@ import { hasValidConsent } from '@/domain/plans'
 import type { GrowthPlan, Merchant } from '@/domain/types'
 
 /**
- * Signature element: two gems and the bond between them.
- * Each half of the bond lights up only when that merchant has consented to the CURRENT terms version.
+ * The two shops and the bond between them. Each half of the line turns green only when that shop
+ * has agreed to the CURRENT terms version, so the line is complete only when both have.
  */
-export function BondPair({ plan, self, partner, compact = false }: { plan: GrowthPlan; self: Merchant; partner: Merchant; compact?: boolean }) {
+export function BondPair({ plan, self, partner, className }: { plan: GrowthPlan; self: Merchant; partner: Merchant; className?: string }) {
   const selfOk = hasValidConsent(plan, self.id)
   const partnerOk = hasValidConsent(plan, partner.id)
-  const both = selfOk && partnerOk
-  const half = (on: boolean) => cn('h-1.5 flex-1', on ? 'bg-saffron' : 'border-t-2 border-dashed border-sage-strong')
-  const side = (m: Merchant, tone: 'self' | 'partner', ok: boolean, label: string) => (
-    <div className={cn('flex min-w-0 flex-col items-center gap-1 text-center', compact ? 'w-24' : 'w-32 sm:w-40')}>
-      <Gem glyph={initial(m.name)} tone={tone} className={compact ? 'size-12' : 'size-16 sm:size-[72px]'} />
-      <p className={cn('font-semibold leading-snug text-forest', compact ? 'text-sm' : 'text-[15px]')}>{label}</p>
-      <p className={cn('flex items-center gap-1 leading-snug', compact ? 'text-[13px]' : 'text-sm', ok ? 'font-medium text-success' : 'text-muted-foreground')}>
+  const side = (m: Merchant, tone: 'self' | 'partner', ok: boolean, name: string) => (
+    <div className="flex w-28 min-w-0 flex-col items-center gap-1 text-center sm:w-36">
+      <Gem glyph={initial(m.name)} tone={tone} className="size-14 sm:size-16" />
+      <p className="w-full truncate text-[15px] leading-tight font-semibold">{name}</p>
+      <p className={cn('flex items-center gap-1 text-[14px] leading-tight', ok ? 'font-semibold text-link' : 'text-muted-foreground')}>
         {ok ? <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" /> : <Clock className="size-4 shrink-0" aria-hidden="true" />}
         {ok ? 'ยืนยันแล้ว' : 'ยังไม่ยืนยัน'}
       </p>
@@ -26,15 +24,17 @@ export function BondPair({ plan, self, partner, compact = false }: { plan: Growt
   )
   return (
     <div
-      className="flex items-start justify-center gap-2"
+      className={cn('flex items-start justify-center gap-1', className)}
       role="group"
       aria-label={`สถานะการยืนยัน: ${self.name} ${selfOk ? 'ยืนยันแล้ว' : 'ยังไม่ยืนยัน'}, ${partner.name} ${partnerOk ? 'ยืนยันแล้ว' : 'ยังไม่ยืนยัน'}`}
     >
       {side(self, 'self', selfOk, 'ร้านคุณ')}
-      <div className={cn('flex flex-1 items-center', compact ? 'mt-5 max-w-24' : 'mt-7 max-w-40 sm:mt-8')} aria-hidden="true">
-        <span className={cn(half(selfOk), 'rounded-l-full')} />
-        <span className={cn('size-3.5 shrink-0 rotate-45', both ? 'bg-saffron' : 'border-2 border-sage-strong bg-card')} />
-        <span className={cn(half(partnerOk), 'rounded-r-full')} />
+      <div className="mt-6 flex w-20 items-center sm:mt-7 sm:w-28" aria-hidden="true">
+        <span className={cn('ease-fill h-1 flex-1 rounded-l-full', selfOk ? 'bg-brand' : 'bg-border')} />
+        <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full transition-colors duration-300', selfOk && partnerOk ? 'bg-brand text-ink' : 'border-2 border-border bg-card text-muted-foreground')}>
+          <Handshake className="size-4" />
+        </span>
+        <span className={cn('ease-fill h-1 flex-1 rounded-r-full', partnerOk ? 'bg-brand' : 'bg-border')} />
       </div>
       {side(partner, 'partner', partnerOk, partner.name)}
     </div>

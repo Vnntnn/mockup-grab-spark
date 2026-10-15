@@ -1,11 +1,11 @@
-import { Compass, ShieldCheck, Undo2 } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/PageHeader'
-import { Panel } from '@/components/Panel'
+import { EmptyArt } from '@/components/visual'
 import { Button } from '@/components/ui/button'
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { PartnerCard } from './PartnerCard'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { AlternativeMatch, PrimaryMatch } from './PartnerCard'
 import { useApp } from '@/app/store'
 import { matching, partnerOf, selfOf } from '@/app/selectors'
 
@@ -20,16 +20,14 @@ export function Opportunities() {
 
   return (
     <>
-      <PageHeader title="หาโอกาสเติบโต" lead="เราเลือกร้านที่น่าจะเข้ากับร้านคุณมาให้ ไม่ต้องค้นหาหรือตั้งค่าเอง" />
+      <PageHeader title="หาโอกาสเติบโต" lead="ร้านที่น่าจะเข้ากับร้านคุณ เราเลือกมาให้แล้ว" />
 
       {!primary ? (
-        <Empty className="mb-6 rounded-2xl border bg-card">
+        <Empty className="surface mb-6">
           <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Compass />
-            </EmptyMedia>
-            <EmptyTitle className="text-[20px]">ตอนนี้ยังไม่มีร้านที่เหมาะจะแนะนำ</EmptyTitle>
-            <EmptyDescription className="text-[16px]">
+            <EmptyArt className="mx-auto" />
+            <EmptyTitle className="text-[22px]">ตอนนี้ยังไม่มีร้านที่เหมาะจะแนะนำ</EmptyTitle>
+            <EmptyDescription className="text-[17px]">
               {me.participationPreference === 'not_now'
                 ? 'คุณเลือกพักการรับคำแนะนำไว้ เปลี่ยนได้ที่หน้า "ร้านของฉัน"'
                 : 'ไม่ใช่ความผิดของร้านคุณ อาจเป็นเพราะเวลาเปิดขายหรือย่านยังไม่ตรงกับร้านอื่น ลองดูที่หน้า "ร้านของฉัน" ว่าข้อมูลถูกต้องหรือไม่'}
@@ -40,34 +38,37 @@ export function Opportunities() {
           </Button>
         </Empty>
       ) : (
-        <div className="mb-8 flex flex-col gap-5">
-          <PartnerCard rec={primary} plan={state.plans[primary.proposedPlanId]} partner={partnerOf(state, state.plans[primary.proposedPlanId])} primary />
+        <>
+          <PrimaryMatch rec={primary} plan={state.plans[primary.proposedPlanId]} partner={partnerOf(state, state.plans[primary.proposedPlanId])} />
           {others.length > 0 && (
-            <>
-              <h2 className="mt-2 text-[20px] font-semibold text-forest">ตัวเลือกอื่นที่ก็น่าสนใจ</h2>
-              {others.map((r) => (
-                <PartnerCard key={r.id} rec={r} plan={state.plans[r.proposedPlanId]} partner={partnerOf(state, state.plans[r.proposedPlanId])} />
-              ))}
-            </>
+            <section aria-labelledby="others-h" className="mt-12">
+              <h2 id="others-h" className="text-[22px] font-bold text-ink">ตัวเลือกอื่น</h2>
+              <ul className="divide-y divide-border">
+                {others.map((r) => (
+                  <AlternativeMatch key={r.id} rec={r} plan={state.plans[r.proposedPlanId]} partner={partnerOf(state, state.plans[r.proposedPlanId])} />
+                ))}
+              </ul>
+            </section>
           )}
-        </div>
+        </>
       )}
 
       {declined.length > 0 && (
-        <Panel title="ที่ยังไม่เข้าร่วม" icon={<Undo2 />} className="mb-6">
-          <ul className="flex flex-col gap-3">
+        <section aria-labelledby="declined-h" className="mt-12">
+          <h2 id="declined-h" className="text-[22px] font-bold text-ink">ที่ยังไม่เข้าร่วม</h2>
+          <ul className="mt-2 flex flex-col divide-y divide-border">
             {declined.map((r) => {
               const plan = state.plans[r.proposedPlanId]
               const p = partnerOf(state, plan)
               return (
-                <li key={r.id} className="flex flex-wrap items-center justify-between gap-3">
-                  <span>{p.name}</span>
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <span className="font-medium">{p.name}</span>
                   <Button
                     variant="outline"
                     className="h-11 text-[15px]"
                     onClick={() => {
-                      dispatch({ type: 'reopen', planId: plan.id })
-                      toast(`นำ${p.name}กลับมาในรายการแล้ว`)
+                      if (dispatch({ type: 'reopen', planId: plan.id })) toast(`นำ${p.name}กลับมาในรายการแล้ว`)
+                      else toast.error('ทำรายการนี้ไม่ได้ในสถานะปัจจุบัน')
                     }}
                   >
                     เปลี่ยนใจ ดูแผนอีกครั้ง
@@ -76,16 +77,16 @@ export function Opportunities() {
               )
             })}
           </ul>
-          <p className="mt-3 text-[15px] text-muted-foreground">การไม่เข้าร่วมไม่กระทบสิทธิการขายตามปกติของร้านคุณ</p>
-        </Panel>
+        </section>
       )}
 
-      <Panel title="เราดูแลความเป็นธรรมให้อย่างไร" icon={<ShieldCheck />}>
-        <p className="mb-2">ก่อนแผนไหนมาถึงคุณ ระบบตรวจก่อนว่าแผนไม่บังคับลดราคา ไม่บังคับแบ่งยอดขาย และไม่มีค่าใช้จ่ายที่ไม่บอก ถ้าไม่ผ่านจะไม่ถูกส่งมาให้คุณเลย</p>
-        <p className="text-muted-foreground">
-          ครั้งนี้ระบบคัดแผนที่ไม่ผ่านออก {fairnessRejected.length} แผน {rejected.length - fairnessRejected.length > 0 && `และไม่แนะนำร้านที่ย่าน เวลา หรือประเภทอาหารไม่เหมาะอีก ${rejected.length - fairnessRejected.length} ร้าน`}
-        </p>
-      </Panel>
+      <p className="mt-12 flex max-w-[64ch] items-start gap-2.5 text-[15px] text-muted-foreground">
+        <ShieldCheck className="mt-1 size-5 shrink-0 text-link" aria-hidden="true" />
+        <span>
+          ระบบตรวจก่อนส่งแผนมาให้คุณ: ไม่บังคับลดราคา ไม่บังคับแบ่งยอดขาย ไม่มีค่าใช้จ่ายแอบแฝง แผนที่ไม่ผ่านจะไม่ถูกแสดง คัดออกแล้ว {fairnessRejected.length} แผน
+          {rejected.length - fairnessRejected.length > 0 && ` และไม่แนะนำอีก ${rejected.length - fairnessRejected.length} ร้านที่เวลาหรืออาหารไม่สอดคล้องกัน`}
+        </span>
+      </p>
     </>
   )
 }

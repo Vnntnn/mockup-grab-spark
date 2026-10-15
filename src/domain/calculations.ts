@@ -23,14 +23,30 @@ export function campaignSeries(seed: ResultsSeed, days: number): DailySeries {
  * incremental  = campaign contribution − estimated baseline contribution
  * Periods are compared per day, so unequal lengths can never inflate a change.
  * Revenue is never treated as profit. Missing or invalid inputs yield null, never a guess.
+ *
+ * Assumptions (illustrative, not learned from real data):
+ *  - The comparison group's order change is applied to the merchant's baseline for BOTH orders and revenue, and the same
+ *    variable-cost % applies to baseline and campaign days. The "expected anyway" figure is therefore an estimate only.
+ *  - Campaign-period orders/revenue are observed totals, never "caused by the campaign". Link clicks are interest, not
+ *    purchases; attributed orders only feed the click-to-order ratio and never the order or profit estimates.
+ *  - Deliberately NOT computed: partner acceptance rate (the demo has one partner per plan, so a rate over a single
+ *    partner is meaningless) and repeat-customer rate (the synthetic data has no customer identity, by privacy design).
+ *    Showing either would be fabrication, so there is no field for them.
  */
 export function calculateCampaignResults(
   seed: ResultsSeed,
   baseline: DailySeries,
   campaign: Campaign,
   variableCostPct: number | null,
+  /**
+   * The day the baseline data runs up to (exclusive): the baseline covers the `baseline.orders.length` days before it.
+   * Defaults to this campaign's start. Pass an earlier day when the baseline history predates an earlier campaign, so the
+   * reported baseline dates always describe the data that was really used.
+   */
+  baselineAnchor?: string,
 ): CampaignResults {
   const start = campaign.startDate ?? ''
+  const anchor = baselineAnchor && start && baselineAnchor < start ? baselineAnchor : start
   const end = campaign.endDate ?? start
   const periodDays = start ? daysBetween(start, end) + 1 : 0
   const cur = campaignSeries(seed, Math.min(seed.reportedDays ?? periodDays, periodDays))
@@ -66,7 +82,7 @@ export function calculateCampaignResults(
   return {
     campaignId: campaign.id,
     reportingPeriod: { start, end },
-    baselinePeriod: { start: addDays(start, -bDays), end: addDays(start, -1) },
+    baselinePeriod: { start: addDays(anchor, -bDays), end: addDays(anchor, -1) },
     orders: { baseline: bOrders, campaign: cOrders },
     revenue: { baseline: bRevenue, campaign: cRevenue },
     promotionalCosts: seed.promotionalCostsBaht,
@@ -78,6 +94,7 @@ export function calculateCampaignResults(
       baselineDays: bDays,
       campaignDays: cDays,
       periodDays,
+      baselineBeforeEarlierCampaign: anchor !== start,
       insufficientReason: reason,
       ordersChangePct: perDayPct(cur.orders, baseline.orders),
       revenueChangePct: perDayPct(cur.revenueBaht, baseline.revenueBaht),
@@ -91,6 +108,22 @@ export function calculateCampaignResults(
       comparisonLabel: group ? `${group.label} ${group.storeCount} ร้าน` : null,
     },
   }
+}
+
+/**
+ * The three order figures shown together on the results page, each rounded ONCE to whole orders:
+ *   observed (campaign orders - baseline scaled to the campaign length) - expected anyway = from the campaign.
+ * The last figure is the difference of the two rounded ones, so what the merchant reads always adds up (38 - 12 = 26),
+ * even when the unrounded numbers (37.57 - 12.09 = 25.49) would round to a different whole number.
+ * Null whenever there is no comparison group or the data is insufficient: nothing is invented.
+ */
+export function orderImpactBreakdown(r: CampaignResults): { observed: number; expectedAnyway: number; fromCampaign: number } | null {
+  const d = r.derived
+  if (d.expectedOrders === null || d.estimatedIncrementalOrders === null) return null
+  const whole = (n: number) => Math.round(n) || 0 // `|| 0` turns -0 into 0
+  const observed = whole(r.orders.campaign - d.baselineOrdersScaled)
+  const expectedAnyway = whole(d.expectedOrders - d.baselineOrdersScaled)
+  return { observed, expectedAnyway, fromCampaign: observed - expectedAnyway }
 }
 
 export const INSUFFICIENT_TEXT: Record<InsufficientReason, string> = {

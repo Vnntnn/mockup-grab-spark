@@ -1,16 +1,16 @@
 export function GemMark({ className = 'size-9' }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden="true" focusable="false">
-      <polygon points="24,14 40,23 40,41 24,50 8,41 8,23" fill="#e0a528" />
-      <polygon points="40,14 56,23 56,41 40,50 24,41 24,23" fill="#cddcc8" opacity=".92" />
+      <polygon points="24,14 40,23 40,41 24,50 8,41 8,23" fill="#00b14f" />
+      <polygon points="40,14 56,23 56,41 40,50 24,41 24,23" fill="#161616" opacity=".92" />
     </svg>
   )
 }
 
 /** A merchant drawn as a gem. The glyph is the shop's first letter. */
 export function Gem({ glyph, tone, className = 'size-16' }: { glyph: string; tone: 'self' | 'partner'; className?: string }) {
-  const fill = tone === 'self' ? '#0f3d2e' : '#cddcc8'
-  const ink = tone === 'self' ? '#ffffff' : '#0f3d2e'
+  const fill = tone === 'self' ? '#161616' : '#00b14f'
+  const ink = tone === 'self' ? '#ffffff' : '#0a0a0a'
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden="true" focusable="false">
       <polygon points="32,2 58,17 58,47 32,62 6,47 6,17" fill={fill} />
