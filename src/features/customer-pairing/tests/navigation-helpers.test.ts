@@ -32,16 +32,23 @@ describe('navigation-helpers', () => {
       const parsed = parsePairingUrl(params, camp, slugsA, slugsB)
       expect(parsed.step).toBe(3) // falls back to step 3
       expect(parsed.needsCanonicalization).toBe(true)
+      expect(parsed.wasDemoted).toBe(true)
     })
 
     it('Redirects to step 2 when deep link enters step 4 or step 3 with missing dishA', () => {
       const p4 = parsePairingUrl(new URLSearchParams('step=4&dishB=moo-satay-10'), camp, slugsA, slugsB)
       expect(p4.step).toBe(2)
       expect(p4.needsCanonicalization).toBe(true)
+      expect(p4.wasDemoted).toBe(true)
 
       const p3 = parsePairingUrl(new URLSearchParams('step=3'), camp, slugsA, slugsB)
       expect(p3.step).toBe(2)
       expect(p3.needsCanonicalization).toBe(true)
+      expect(p3.wasDemoted).toBe(true)
+
+      const validP4 = parsePairingUrl(new URLSearchParams('step=4&dishA=khao-man-gai-tom&dishB=moo-satay-10'), camp, slugsA, slugsB)
+      expect(validP4.step).toBe(4)
+      expect(validP4.wasDemoted).toBe(false)
     })
 
     it('parses edit=true into isEditing flag', () => {

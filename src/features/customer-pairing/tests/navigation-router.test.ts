@@ -331,6 +331,7 @@ describe('navigation-router integration: history stack & 6 scenarios', () => {
       expect(nav.urlState.step).toBe(2)
       expect(nav.urlState.dishA).toBe('khao-man-gai-tom')
       expect(typeof nav.goToNextStep).toBe('function')
+      expect(typeof nav.goToStep).toBe('function')
       expect(typeof nav.goBack).toBe('function')
       expect(typeof nav.startEditing).toBe('function')
       expect(typeof nav.selectDish).toBe('function')

@@ -21,6 +21,7 @@ export interface UsePairingNavigationReturn {
   urlState: PairingUrlState
   historyState: HistoryPreEditState | null
   goToNextStep: () => void
+  goToStep: (targetStep: 1 | 2 | 3 | 4) => void
   goBack: () => void
   startEditing: (targetStep: 2 | 3) => void
   selectDish: (role: 'A' | 'B', slug: string) => void
@@ -55,6 +56,22 @@ export function usePairingNavigation({
     const decision = computeNextStepTarget(urlState, campaignId)
     applyNavigationDecision(navigate, decision)
   }, [urlState, campaignId, navigate])
+
+  const goToStep = useCallback(
+    (targetStep: 1 | 2 | 3 | 4) => {
+      const query = new URLSearchParams()
+      query.set('step', String(targetStep))
+      if (targetStep > 1 && urlState.dishA) query.set('dishA', urlState.dishA)
+      if (targetStep > 1 && urlState.dishB) query.set('dishB', urlState.dishB)
+      if (urlState.isSample) query.set('sample', 'true')
+      return applyNavigationDecision(navigate, {
+        type: 'push',
+        targetUrl: `/pair/${campaignId}?${query.toString()}`,
+        state: { inJourney: true },
+      })
+    },
+    [urlState.dishA, urlState.dishB, urlState.isSample, campaignId, navigate]
+  )
 
   const goBack = useCallback(() => {
     const decision = computeBackDecision(urlState, campaignId, historyState)
@@ -112,6 +129,7 @@ export function usePairingNavigation({
     urlState,
     historyState,
     goToNextStep,
+    goToStep,
     goBack,
     startEditing,
     selectDish,

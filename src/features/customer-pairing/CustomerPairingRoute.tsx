@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, MemoryRouter, useParams, useInRouterContext } from 'react-router-dom'
 import { AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
@@ -59,6 +59,12 @@ function CustomerPairingActive({
     validSlugsB,
   })
 
+  useEffect(() => {
+    if (nav.urlState.wasDemoted) {
+      toast.info('กรุณาเลือกเมนูให้ครบถ้วนก่อนดูผลลัพธ์')
+    }
+  }, [nav.urlState.wasDemoted])
+
   const [storeModalMerchant, setStoreModalMerchant] = useState<string | null>(null)
 
   const selectedDishA = useMemo(
@@ -79,7 +85,9 @@ function CustomerPairingActive({
     ? `เลือกแล้ว: ${selectedDishB.name} · ${baht(selectedDishB.priceBaht)}`
     : 'ยังไม่ได้เลือกของว่าง'
 
-  const shareTitle = `คู่เมนูสุดพิเศษจากร้าน${data.restaurantA.name}และร้าน${data.restaurantB.name}`
+  const shareTitle = nav.urlState.isSample
+    ? 'คู่เมนูตัวอย่างสำหรับการสาธิต - GemBond'
+    : 'คู่เมนูที่คุณเลือก - GemBond'
 
   const handleShare = useCallback(async () => {
     if (typeof window === 'undefined') return
@@ -102,14 +110,17 @@ function CustomerPairingActive({
           url: shareUrl,
         })
         return
-      } catch {
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          return
+        }
         // Fallback to clipboard
       }
     }
     if (navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(shareUrl)
-        toast.success('คัดลอกลิงก์แชร์แล้ว')
+        toast.success('คัดลอกลิงก์คู่เมนูนี้แล้ว')
       } catch {
         toast.error('ไม่สามารถคัดลอกลิงก์ได้')
       }
@@ -122,7 +133,6 @@ function CustomerPairingActive({
         step={nav.urlState.step}
         onBack={nav.urlState.step > 1 ? nav.goBack : undefined}
         onShare={nav.urlState.step === 4 ? handleShare : undefined}
-        shareTitle={shareTitle}
       />
 
       <main className="flex-1">
@@ -176,7 +186,7 @@ function CustomerPairingActive({
                   selectedDishA={selectedDishA}
                   selectedSlugB={nav.urlState.dishB}
                   onSelectB={(dish) => nav.selectDish('B', dish.slug)}
-                  onEditA={() => nav.startEditing(2)}
+                  onEditA={() => nav.goToStep(2)}
                 />
               </div>
               <div className="hidden lg:block lg:col-span-5">

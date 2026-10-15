@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Check } from 'lucide-react'
 import { baht } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -19,6 +20,40 @@ export function Screen3SelectComplement({
   onSelectB,
   onEditA,
 }: Screen3SelectComplementProps) {
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  const options = data.menuB
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLDivElement>,
+    index: number,
+    dish: PairingDish
+  ) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault()
+      onSelectB(dish)
+      return
+    }
+
+    let nextIndex: number | null = null
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      nextIndex = (index + 1) % options.length
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      nextIndex = (index - 1 + options.length) % options.length
+    } else if (e.key === 'Home') {
+      nextIndex = 0
+    } else if (e.key === 'End') {
+      nextIndex = options.length - 1
+    }
+
+    if (nextIndex !== null) {
+      e.preventDefault()
+      const nextDish = options[nextIndex]
+      onSelectB(nextDish)
+      cardRefs.current[nextIndex]?.focus()
+    }
+  }
+
   return (
     <div className="max-w-lg mx-auto py-2">
       {/* Subheader */}
@@ -52,22 +87,20 @@ export function Screen3SelectComplement({
         aria-label={`เลือกของว่างจาก${data.restaurantB.name}`}
         className="flex flex-col gap-3 pb-36"
       >
-        {data.menuB.map((dish, index) => {
+        {options.map((dish, index) => {
           const isSelected = selectedSlugB === dish.slug
           const isFocusable = isSelected || (!selectedSlugB && index === 0)
           return (
             <div
               key={dish.slug}
+              ref={(el) => {
+                cardRefs.current[index] = el
+              }}
               role="radio"
               aria-checked={isSelected}
               tabIndex={isFocusable ? 0 : -1}
               onClick={() => onSelectB(dish)}
-              onKeyDown={(e) => {
-                if (e.key === ' ' || e.key === 'Enter') {
-                  e.preventDefault()
-                  onSelectB(dish)
-                }
-              }}
+              onKeyDown={(e) => handleKeyDown(e, index, dish)}
               className={cn(
                 'group flex min-h-[56px] items-center justify-between gap-4 rounded-2xl p-3 sm:p-4 cursor-pointer transition-all select-none focus-visible:outline-2 focus-visible:outline-ring',
                 isSelected

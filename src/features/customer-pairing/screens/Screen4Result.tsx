@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { ArrowRight, Link2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { baht } from '@/lib/format'
 import { SimulatedBadge } from '@/components/SimulatedBadge'
 import { DishSvgArt } from '../components/DishSvgArt'
@@ -42,23 +43,30 @@ export function Screen4Result({
         canonicalParams.set('sample', 'true')
       }
       const shareUrl = `${window.location.origin}/pair/${data.campaignId}?${canonicalParams.toString()}`
+      const shareTitle = isSample
+        ? 'คู่เมนูตัวอย่างสำหรับการสาธิต - GemBond'
+        : 'คู่เมนูที่คุณเลือก - GemBond'
       if (navigator.share) {
         try {
           await navigator.share({
-            title: 'คู่เมนูจาก Grab GemBond',
+            title: shareTitle,
             text: `${dishA.name} x ${dishB.name}`,
             url: shareUrl,
           })
           return
-        } catch {
+        } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            return
+          }
           // Fallback to clipboard
         }
       }
       if (navigator.clipboard) {
         try {
           await navigator.clipboard.writeText(shareUrl)
+          toast.success('คัดลอกลิงก์คู่เมนูนี้แล้ว')
         } catch {
-          // Fallback
+          toast.error('ไม่สามารถคัดลอกลิงก์ได้')
         }
       }
     }
@@ -73,7 +81,7 @@ export function Screen4Result({
     : `ไปยังหน้าร้าน${data.restaurantB.name}`
 
   return (
-    <div className="max-w-lg mx-auto py-4 flex flex-col gap-6 pb-20">
+    <div className="max-w-lg lg:max-w-4xl mx-auto py-4 flex flex-col gap-6 pb-20">
       {/* Origin Attribution & Heading */}
       <div className="text-center px-2">
         {isSample && (
@@ -92,9 +100,9 @@ export function Screen4Result({
       </div>
 
       {/* Editorial Shared Dining Stage */}
-      <div className="rounded-3xl border border-[#DDE2DD] bg-[#F8FAF8] p-5 sm:p-6 shadow-xs flex flex-col gap-6">
+      <div className="rounded-3xl border border-[#DDE2DD] bg-[#F8FAF8] p-5 sm:p-6 shadow-xs flex flex-col gap-6 lg:grid lg:grid-cols-11 lg:items-center lg:gap-4">
         {/* Section A: Main Dish */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:col-span-5">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {`อาหารจานหลัก · ${data.restaurantA.name}`}
           </div>
@@ -120,16 +128,16 @@ export function Screen4Result({
         </div>
 
         {/* Connecting Symbol */}
-        <div className="flex items-center justify-center -my-2" aria-hidden="true">
-          <div className="h-px flex-1 bg-[#DDE2DD]" />
-          <div className="mx-3 flex size-10 items-center justify-center rounded-full border border-[#DDE2DD] bg-white text-muted-foreground shadow-xs">
+        <div className="flex items-center justify-center -my-2 lg:my-0 lg:col-span-1 lg:flex-col" aria-hidden="true">
+          <div className="h-px flex-1 bg-[#DDE2DD] lg:h-8 lg:w-px" />
+          <div className="mx-3 my-0 lg:my-2 lg:mx-0 flex size-10 shrink-0 items-center justify-center rounded-full border border-[#DDE2DD] bg-white text-muted-foreground shadow-xs">
             <Link2 className="size-5 text-[#00B14F] rotate-45" />
           </div>
-          <div className="h-px flex-1 bg-[#DDE2DD]" />
+          <div className="h-px flex-1 bg-[#DDE2DD] lg:h-8 lg:w-px" />
         </div>
 
         {/* Section B: Complement Dish */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:col-span-5">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {`ของว่างทานเล่น · ${data.restaurantB.name}`}
           </div>
@@ -156,7 +164,7 @@ export function Screen4Result({
       </div>
 
       {/* Disclosures & Notices */}
-      <div className="rounded-2xl border border-border/80 bg-secondary/50 p-4 text-center space-y-1">
+      <div className="rounded-2xl border border-border/80 bg-secondary/50 p-4 text-center space-y-1 max-w-lg mx-auto w-full">
         <p className="text-sm font-medium text-foreground">
           ราคาแสดงแยกตามร้าน และสั่งซื้อกับแต่ละร้านแยกกัน
         </p>
@@ -166,7 +174,7 @@ export function Screen4Result({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col gap-3 pt-2">
+      <div className="flex flex-col gap-3 pt-2 max-w-lg mx-auto w-full">
         {/* Primary Share */}
         <button
           type="button"

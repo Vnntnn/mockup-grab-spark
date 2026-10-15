@@ -219,16 +219,25 @@ describe('Responsive Dock & Header', () => {
       expect(html).not.toContain('ต้นแบบจำลอง')
     })
 
-    it('renders merchant name, prototype notice, and 48px close button when open', () => {
-      const html = renderToString(React.createElement(StoreModal, {
+    it('renders merchant name, prototype notice, and 48px close button when open without duplicate store prefix', () => {
+      const html1 = renderToString(React.createElement(StoreModal, {
         isOpen: true,
         onClose: () => {},
         merchantName: 'ร้านข้าวหอม',
       }))
-      expect(html).toContain('ร้านข้าวหอม')
-      expect(html).toContain('ต้นแบบจำลอง')
-      expect(html).toContain('min-h-[48px]')
-      expect(html).toContain('px-6')
+      expect(html1).toContain('ร้านข้าวหอม')
+      expect(html1).not.toContain('ร้าน ร้าน')
+      expect(html1).toContain('ต้นแบบจำลอง')
+      expect(html1).toContain('min-h-[48px]')
+      expect(html1).toContain('px-6')
+
+      const html2 = renderToString(React.createElement(StoreModal, {
+        isOpen: true,
+        onClose: () => {},
+        merchantName: 'หมูสะเต๊ะบ้านสวน',
+      }))
+      expect(html2).toContain('ร้าน หมูสะเต๊ะบ้านสวน')
+      expect(html2).not.toContain('ร้าน ร้าน')
     })
 
     it('contains zero emojis in StoreModal', () => {

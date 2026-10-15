@@ -1,11 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderToString } from 'react-dom/server'
 import React from 'react'
-import { MemoryRouter, Navigate } from 'react-router-dom'
+import { createMemoryRouter, MemoryRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { toast } from 'sonner'
 import { CustomerPairingRoute } from '../CustomerPairingRoute'
 import { createInitialState } from '@/app/reducer'
 import { DEFAULT_CAMPAIGN_ID } from '../data'
 import { CampaignPreview } from '@/features/campaigns/CampaignPreview'
+import { usePairingNavigation } from '../hooks/usePairingNavigation'
 
 vi.mock('radix-ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('radix-ui')>()
@@ -203,5 +205,149 @@ describe('CustomerPairingRoute & Root Redirect', () => {
     expect(html).toContain('เปิดมุมมองลูกค้า (Interactive Demo)')
     expect(html).toContain(`/pair/${DEFAULT_CAMPAIGN_ID}`)
     expect(html).toContain('min-h-[48px]')
+  })
+
+  it('renders clean default header title "คู่เมนูของคุณ" on Step 4 without full share text', () => {
+    const html = renderToString(
+      React.createElement(
+        MemoryRouter,
+        {
+          initialEntries: [
+            `/pair/${DEFAULT_CAMPAIGN_ID}?step=4&dishA=khao-man-gai-tom&dishB=moo-satay-10`,
+          ],
+        },
+        React.createElement(CustomerPairingRoute, {
+          campaignId: DEFAULT_CAMPAIGN_ID,
+          testState: state,
+        })
+      )
+    )
+    expect(html).toContain('คู่เมนูของคุณ')
+    expect(html).not.toContain('คู่เมนูที่คุณเลือก - GemBond')
+  })
+
+  interface ReactInternalsWithHooks {
+    H?: {
+      useEffect?: (fn: () => void) => void
+      useLayoutEffect?: (fn: () => void) => void
+    }
+  }
+
+  function renderWithEffects(element: React.ReactElement) {
+    const pendingEffects: Array<() => void> = []
+    function EffectEnabler({ children }: { children: React.ReactNode }) {
+      const internals = (React as unknown as {
+        __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?: ReactInternalsWithHooks
+      }).__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+      if (internals?.H) {
+        internals.H.useEffect = (fn: () => void) => {
+          pendingEffects.push(fn)
+        }
+        internals.H.useLayoutEffect = (fn: () => void) => {
+          pendingEffects.push(fn)
+        }
+      }
+      return children
+    }
+    const html = renderToString(React.createElement(EffectEnabler, null, element))
+    pendingEffects.forEach((fn) => fn())
+    return html
+  }
+
+  it('triggers info toast when deep link enters Step 4 or Step 3 with incomplete dish selections', () => {
+    const toastInfoMock = vi.spyOn(toast, 'info')
+
+    try {
+      // Direct deep link to Step 4 without dishA or dishB
+      renderWithEffects(
+        React.createElement(
+          MemoryRouter,
+          { initialEntries: [`/pair/${DEFAULT_CAMPAIGN_ID}?step=4`] },
+          React.createElement(CustomerPairingRoute, {
+            campaignId: DEFAULT_CAMPAIGN_ID,
+            testState: state,
+          })
+        )
+      )
+      expect(toastInfoMock).toHaveBeenCalledWith('กรุณาเลือกเมนูให้ครบถ้วนก่อนดูผลลัพธ์')
+      toastInfoMock.mockClear()
+
+      // Direct deep link to Step 4 with only dishA (missing dishB)
+      renderWithEffects(
+        React.createElement(
+          MemoryRouter,
+          { initialEntries: [`/pair/${DEFAULT_CAMPAIGN_ID}?step=4&dishA=khao-man-gai-tom`] },
+          React.createElement(CustomerPairingRoute, {
+            campaignId: DEFAULT_CAMPAIGN_ID,
+            testState: state,
+          })
+        )
+      )
+      expect(toastInfoMock).toHaveBeenCalledWith('กรุณาเลือกเมนูให้ครบถ้วนก่อนดูผลลัพธ์')
+      toastInfoMock.mockClear()
+
+      // Direct deep link to Step 3 without dishA
+      renderWithEffects(
+        React.createElement(
+          MemoryRouter,
+          { initialEntries: [`/pair/${DEFAULT_CAMPAIGN_ID}?step=3`] },
+          React.createElement(CustomerPairingRoute, {
+            campaignId: DEFAULT_CAMPAIGN_ID,
+            testState: state,
+          })
+        )
+      )
+      expect(toastInfoMock).toHaveBeenCalledWith('กรุณาเลือกเมนูให้ครบถ้วนก่อนดูผลลัพธ์')
+      toastInfoMock.mockClear()
+
+      // Valid Step 4 deep link does NOT trigger fallback toast
+      renderWithEffects(
+        React.createElement(
+          MemoryRouter,
+          { initialEntries: [`/pair/${DEFAULT_CAMPAIGN_ID}?step=4&dishA=khao-man-gai-tom&dishB=moo-satay-10`] },
+          React.createElement(CustomerPairingRoute, {
+            campaignId: DEFAULT_CAMPAIGN_ID,
+            testState: state,
+          })
+        )
+      )
+      expect(toastInfoMock).not.toHaveBeenCalled()
+    } finally {
+      toastInfoMock.mockRestore()
+    }
+  })
+
+  it('Step 3 onEditA navigates to Step 2 with edit=true absent and dishB preserved via push', async () => {
+    let capturedOnEditA: (() => Promise<unknown> | void) | null = null
+    function SpyComponent() {
+      const hook = usePairingNavigation({
+        campaignId: DEFAULT_CAMPAIGN_ID,
+        validSlugsA: ['khao-man-gai-tom', 'khao-man-gai-tod', 'khao-na-gai'],
+        validSlugsB: ['moo-satay-10', 'gai-yang', 'peek-gai-tod'],
+      })
+      capturedOnEditA = () => hook.goToStep(2)
+      return null
+    }
+
+    const router = createMemoryRouter([
+      { path: '/pair/:campaignId', Component: SpyComponent },
+    ], {
+      initialEntries: [`/pair/${DEFAULT_CAMPAIGN_ID}?step=3&dishA=khao-man-gai-tom&dishB=moo-satay-10`],
+      initialIndex: 0,
+    })
+
+    renderWithEffects(React.createElement(RouterProvider, { router }))
+    expect(capturedOnEditA).not.toBeNull()
+    const p = capturedOnEditA!()
+    if (p instanceof Promise) {
+      await p
+    }
+
+    const search = router.state.location.search
+    expect(search).toContain('step=2')
+    expect(search).toContain('dishA=khao-man-gai-tom')
+    expect(search).toContain('dishB=moo-satay-10')
+    expect(search).not.toContain('edit=true')
+    expect(router.state.historyAction).toBe('PUSH')
   })
 })

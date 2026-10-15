@@ -550,7 +550,7 @@ export function DishSvgArt({
     >
       <svg
         viewBox="0 0 160 120"
-        className="block h-full w-full object-cover select-none"
+        className="block h-full w-full select-none"
         preserveAspectRatio="xMidYMid slice"
         {...svgA11yProps}
       >

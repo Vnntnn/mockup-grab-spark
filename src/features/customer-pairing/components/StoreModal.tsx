@@ -15,11 +15,12 @@ export interface StoreModalProps {
 }
 
 export function StoreModal({ isOpen, onClose, merchantName }: StoreModalProps) {
+  const storeTitle = merchantName.startsWith('ร้าน') ? merchantName : `ร้าน ${merchantName}`
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>ร้าน {merchantName}</DialogTitle>
+          <DialogTitle>{storeTitle}</DialogTitle>
           <DialogDescription>
             ระบบนี้เป็นต้นแบบจำลอง (Prototype Demonstration) เพื่อแสดงแนวคิดการจับคู่เมนูข้ามร้าน ไม่ได้เชื่อมต่อกับระบบสั่งอาหารจริง และไม่มีการตัดเงินหรือส่งอาหารจริง
           </DialogDescription>

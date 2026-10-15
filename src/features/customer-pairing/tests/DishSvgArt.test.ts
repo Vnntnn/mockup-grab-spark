@@ -52,9 +52,9 @@ describe('DishSvgArt component', () => {
     const mdHtml = renderToString(React.createElement(DishSvgArt, { slug: 'khao-man-gai-tom', size: 'md' }))
     const lgHtml = renderToString(React.createElement(DishSvgArt, { slug: 'khao-man-gai-tom', size: 'lg' }))
 
-    expect(smHtml).toBeDefined()
-    expect(mdHtml).toBeDefined()
-    expect(lgHtml).toBeDefined()
+    expect(smHtml).toContain('w-24')
+    expect(mdHtml).toContain('max-w-sm')
+    expect(lgHtml).toContain('max-w-md')
   })
 
   it('merges custom className on wrapper', () => {

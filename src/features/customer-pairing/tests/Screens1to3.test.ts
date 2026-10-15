@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { renderToString } from 'react-dom/server'
 import React from 'react'
 import { Screen1Discover } from '../screens/Screen1Discover'
@@ -6,6 +6,25 @@ import { Screen2SelectMain } from '../screens/Screen2SelectMain'
 import { Screen3SelectComplement } from '../screens/Screen3SelectComplement'
 import { createInitialState } from '@/app/reducer'
 import { resolvePairingCampaign, DEFAULT_CAMPAIGN_ID } from '../data'
+
+type RadioCardElement = React.ReactElement<{
+  onKeyDown: (e: { key: string; preventDefault: () => void }) => void
+  ref?: (el: HTMLElement | null) => void
+}> & {
+  ref?: (el: HTMLElement | null) => void
+}
+
+interface RenderedScreen2Tree {
+  props: {
+    children: [unknown, { props: { children: RadioCardElement[] } }]
+  }
+}
+
+interface RenderedScreen3Tree {
+  props: {
+    children: [unknown, unknown, { props: { children: RadioCardElement[] } }]
+  }
+}
 
 describe('Screens 1, 2, 3', () => {
   const state = createInitialState('2026-10-16')
@@ -173,6 +192,148 @@ describe('Screens 1, 2, 3', () => {
       expect(radioTags[2]).toContain('tabindex="-1"')
     })
 
+    it('advances selection and focuses next card on ArrowDown and ArrowRight, with wrapping', () => {
+      const onSelect = vi.fn()
+      const capture = { current: null as RenderedScreen2Tree | null }
+      function Wrapper() {
+        const el = Screen2SelectMain({
+          data: campData,
+          selectedSlug: null,
+          onSelect,
+        })
+        capture.current = el as unknown as RenderedScreen2Tree
+        return el
+      }
+      renderToString(React.createElement(Wrapper))
+      const radioGroup = capture.current!.props.children[1]
+      const cards = radioGroup.props.children
+      const mockDoms = cards.map(() => ({ focus: vi.fn() }))
+      cards.forEach((card, i) => {
+        const refFn = card.props.ref ?? card.ref
+        if (typeof refFn === 'function') refFn(mockDoms[i] as unknown as HTMLElement)
+      })
+
+      // ArrowDown from index 0 -> advances to index 1
+      const preventDefault1 = vi.fn()
+      cards[0].props.onKeyDown({ key: 'ArrowDown', preventDefault: preventDefault1 })
+      expect(preventDefault1).toHaveBeenCalled()
+      expect(onSelect).toHaveBeenLastCalledWith(campData.menuA[1])
+      expect(mockDoms[1].focus).toHaveBeenCalled()
+
+      // ArrowRight from index 1 -> advances to index 2
+      const preventDefault2 = vi.fn()
+      cards[1].props.onKeyDown({ key: 'ArrowRight', preventDefault: preventDefault2 })
+      expect(preventDefault2).toHaveBeenCalled()
+      expect(onSelect).toHaveBeenLastCalledWith(campData.menuA[2])
+      expect(mockDoms[2].focus).toHaveBeenCalled()
+
+      // ArrowDown from index 2 (last) -> wraps to index 0 (first)
+      const preventDefault3 = vi.fn()
+      cards[2].props.onKeyDown({ key: 'ArrowDown', preventDefault: preventDefault3 })
+      expect(preventDefault3).toHaveBeenCalled()
+      expect(onSelect).toHaveBeenLastCalledWith(campData.menuA[0])
+      expect(mockDoms[0].focus).toHaveBeenCalled()
+    })
+
+    it('reverses selection and focuses previous card on ArrowUp and ArrowLeft, with wrapping', () => {
+      const onSelect = vi.fn()
+      const capture = { current: null as RenderedScreen2Tree | null }
+      function Wrapper() {
+        const el = Screen2SelectMain({
+          data: campData,
+          selectedSlug: 'khao-man-gai-tod',
+          onSelect,
+        })
+        capture.current = el as unknown as RenderedScreen2Tree
+        return el
+      }
+      renderToString(React.createElement(Wrapper))
+      const radioGroup = capture.current!.props.children[1]
+      const cards = radioGroup.props.children
+      const mockDoms = cards.map(() => ({ focus: vi.fn() }))
+      cards.forEach((card, i) => {
+        const refFn = card.props.ref ?? card.ref
+        if (typeof refFn === 'function') refFn(mockDoms[i] as unknown as HTMLElement)
+      })
+
+      // ArrowUp from index 1 -> moves to index 0
+      const preventDefault1 = vi.fn()
+      cards[1].props.onKeyDown({ key: 'ArrowUp', preventDefault: preventDefault1 })
+      expect(preventDefault1).toHaveBeenCalled()
+      expect(onSelect).toHaveBeenLastCalledWith(campData.menuA[0])
+      expect(mockDoms[0].focus).toHaveBeenCalled()
+
+      // ArrowLeft from index 0 (first) -> wraps to index 2 (last)
+      const preventDefault2 = vi.fn()
+      cards[0].props.onKeyDown({ key: 'ArrowLeft', preventDefault: preventDefault2 })
+      expect(preventDefault2).toHaveBeenCalled()
+      expect(onSelect).toHaveBeenLastCalledWith(campData.menuA[2])
+      expect(mockDoms[2].focus).toHaveBeenCalled()
+    })
+
+    it('selects first and last options on Home and End keys', () => {
+      const onSelect = vi.fn()
+      const capture = { current: null as RenderedScreen2Tree | null }
+      function Wrapper() {
+        const el = Screen2SelectMain({
+          data: campData,
+          selectedSlug: 'khao-man-gai-tod',
+          onSelect,
+        })
+        capture.current = el as unknown as RenderedScreen2Tree
+        return el
+      }
+      renderToString(React.createElement(Wrapper))
+      const radioGroup = capture.current!.props.children[1]
+      const cards = radioGroup.props.children
+      const mockDoms = cards.map(() => ({ focus: vi.fn() }))
+      cards.forEach((card, i) => {
+        const refFn = card.props.ref ?? card.ref
+        if (typeof refFn === 'function') refFn(mockDoms[i] as unknown as HTMLElement)
+      })
+
+      // Home from index 1 -> jumps to index 0
+      const preventDefaultHome = vi.fn()
+      cards[1].props.onKeyDown({ key: 'Home', preventDefault: preventDefaultHome })
+      expect(preventDefaultHome).toHaveBeenCalled()
+      expect(onSelect).toHaveBeenLastCalledWith(campData.menuA[0])
+      expect(mockDoms[0].focus).toHaveBeenCalled()
+
+      // End from index 0 -> jumps to index 2
+      const preventDefaultEnd = vi.fn()
+      cards[0].props.onKeyDown({ key: 'End', preventDefault: preventDefaultEnd })
+      expect(preventDefaultEnd).toHaveBeenCalled()
+      expect(onSelect).toHaveBeenLastCalledWith(campData.menuA[2])
+      expect(mockDoms[2].focus).toHaveBeenCalled()
+    })
+
+    it('selects current option on Space and Enter keys without moving index', () => {
+      const onSelect = vi.fn()
+      const capture = { current: null as RenderedScreen2Tree | null }
+      function Wrapper() {
+        const el = Screen2SelectMain({
+          data: campData,
+          selectedSlug: null,
+          onSelect,
+        })
+        capture.current = el as unknown as RenderedScreen2Tree
+        return el
+      }
+      renderToString(React.createElement(Wrapper))
+      const radioGroup = capture.current!.props.children[1]
+      const cards = radioGroup.props.children
+
+      const preventDefaultSpace = vi.fn()
+      cards[1].props.onKeyDown({ key: ' ', preventDefault: preventDefaultSpace })
+      expect(preventDefaultSpace).toHaveBeenCalled()
+      expect(onSelect).toHaveBeenLastCalledWith(campData.menuA[1])
+
+      const preventDefaultEnter = vi.fn()
+      cards[2].props.onKeyDown({ key: 'Enter', preventDefault: preventDefaultEnter })
+      expect(preventDefaultEnter).toHaveBeenCalled()
+      expect(onSelect).toHaveBeenLastCalledWith(campData.menuA[2])
+    })
+
     it('contains zero emojis on Screen 2', () => {
       const html = renderToString(
         React.createElement(Screen2SelectMain, {
@@ -326,6 +487,103 @@ describe('Screens 1, 2, 3', () => {
       expect(radioTags[0]).toContain('tabindex="-1"')
       expect(radioTags[1]).toContain('tabindex="0"')
       expect(radioTags[2]).toContain('tabindex="-1"')
+    })
+
+    it('advances selection and focuses next complement card on ArrowDown / ArrowRight, with wrapping', () => {
+      const onSelectB = vi.fn()
+      const capture = { current: null as RenderedScreen3Tree | null }
+      function Wrapper() {
+        const el = Screen3SelectComplement({
+          data: campData,
+          selectedDishA: campData.menuA[0],
+          selectedSlugB: null,
+          onSelectB,
+          onEditA: () => {},
+        })
+        capture.current = el as unknown as RenderedScreen3Tree
+        return el
+      }
+      renderToString(React.createElement(Wrapper))
+      const radioGroup = capture.current!.props.children[2]
+      const cards = radioGroup.props.children
+      const mockDoms = cards.map(() => ({ focus: vi.fn() }))
+      cards.forEach((card, i) => {
+        const refFn = card.props.ref ?? card.ref
+        if (typeof refFn === 'function') refFn(mockDoms[i] as unknown as HTMLElement)
+      })
+
+      // ArrowDown from index 0 -> index 1
+      const preventDefault1 = vi.fn()
+      cards[0].props.onKeyDown({ key: 'ArrowDown', preventDefault: preventDefault1 })
+      expect(preventDefault1).toHaveBeenCalled()
+      expect(onSelectB).toHaveBeenLastCalledWith(campData.menuB[1])
+      expect(mockDoms[1].focus).toHaveBeenCalled()
+
+      // ArrowRight from index 1 -> index 2
+      const preventDefault2 = vi.fn()
+      cards[1].props.onKeyDown({ key: 'ArrowRight', preventDefault: preventDefault2 })
+      expect(preventDefault2).toHaveBeenCalled()
+      expect(onSelectB).toHaveBeenLastCalledWith(campData.menuB[2])
+      expect(mockDoms[2].focus).toHaveBeenCalled()
+
+      // ArrowDown from index 2 -> wraps to index 0
+      const preventDefault3 = vi.fn()
+      cards[2].props.onKeyDown({ key: 'ArrowDown', preventDefault: preventDefault3 })
+      expect(preventDefault3).toHaveBeenCalled()
+      expect(onSelectB).toHaveBeenLastCalledWith(campData.menuB[0])
+      expect(mockDoms[0].focus).toHaveBeenCalled()
+    })
+
+    it('reverses selection and jumps with Home/End on Screen 3', () => {
+      const onSelectB = vi.fn()
+      const capture = { current: null as RenderedScreen3Tree | null }
+      function Wrapper() {
+        const el = Screen3SelectComplement({
+          data: campData,
+          selectedDishA: campData.menuA[0],
+          selectedSlugB: 'gai-yang',
+          onSelectB,
+          onEditA: () => {},
+        })
+        capture.current = el as unknown as RenderedScreen3Tree
+        return el
+      }
+      renderToString(React.createElement(Wrapper))
+      const radioGroup = capture.current!.props.children[2]
+      const cards = radioGroup.props.children
+      const mockDoms = cards.map(() => ({ focus: vi.fn() }))
+      cards.forEach((card, i) => {
+        const refFn = card.props.ref ?? card.ref
+        if (typeof refFn === 'function') refFn(mockDoms[i] as unknown as HTMLElement)
+      })
+
+      // ArrowUp from index 1 -> index 0
+      const preventDefault1 = vi.fn()
+      cards[1].props.onKeyDown({ key: 'ArrowUp', preventDefault: preventDefault1 })
+      expect(preventDefault1).toHaveBeenCalled()
+      expect(onSelectB).toHaveBeenLastCalledWith(campData.menuB[0])
+      expect(mockDoms[0].focus).toHaveBeenCalled()
+
+      // ArrowLeft from index 0 -> wraps to index 2
+      const preventDefault2 = vi.fn()
+      cards[0].props.onKeyDown({ key: 'ArrowLeft', preventDefault: preventDefault2 })
+      expect(preventDefault2).toHaveBeenCalled()
+      expect(onSelectB).toHaveBeenLastCalledWith(campData.menuB[2])
+      expect(mockDoms[2].focus).toHaveBeenCalled()
+
+      // Home from index 2 -> index 0
+      const preventDefaultHome = vi.fn()
+      cards[2].props.onKeyDown({ key: 'Home', preventDefault: preventDefaultHome })
+      expect(preventDefaultHome).toHaveBeenCalled()
+      expect(onSelectB).toHaveBeenLastCalledWith(campData.menuB[0])
+      expect(mockDoms[0].focus).toHaveBeenCalled()
+
+      // End from index 0 -> index 2
+      const preventDefaultEnd = vi.fn()
+      cards[0].props.onKeyDown({ key: 'End', preventDefault: preventDefaultEnd })
+      expect(preventDefaultEnd).toHaveBeenCalled()
+      expect(onSelectB).toHaveBeenLastCalledWith(campData.menuB[2])
+      expect(mockDoms[2].focus).toHaveBeenCalled()
     })
   })
 })

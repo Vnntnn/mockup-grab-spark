@@ -8,6 +8,7 @@ export interface PairingUrlState {
   isEditing: boolean
   needsCanonicalization: boolean
   canonicalUrl: string
+  wasDemoted?: boolean
 }
 
 export interface HistoryPreEditState {
@@ -64,17 +65,21 @@ export function parsePairingUrl(
 
   // Determine effective step according to deep link constraints
   let effectiveStep: 1 | 2 | 3 | 4
+  let wasDemoted = false
   if (rawStep === 4) {
     if (!dishA) {
       effectiveStep = 2
+      wasDemoted = true
     } else if (!dishB) {
       effectiveStep = 3
+      wasDemoted = true
     } else {
       effectiveStep = 4
     }
   } else if (rawStep === 3) {
     if (!dishA) {
       effectiveStep = 2
+      wasDemoted = true
     } else {
       effectiveStep = 3
     }
@@ -115,6 +120,7 @@ export function parsePairingUrl(
     isEditing,
     needsCanonicalization,
     canonicalUrl,
+    wasDemoted,
   }
 }
 
