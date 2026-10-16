@@ -30,7 +30,7 @@ export function PairingHeader({ step, onBack, onShare, shareTitle, className }: 
         )}
       </div>
       <p className="pr-body truncate px-2 font-semibold">{title}</p>
-      <div className="flex min-h-[48px] min-w-[48px] items-center gap-1">
+      <div className="flex min-h-[48px] min-w-[48px] items-center gap-2">
         <LangToggle />
         <CustomerDemoTools />
         {step === 4 && onShare && (

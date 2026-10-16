@@ -29,19 +29,20 @@ export function StickyDecisionDock({ plan, isSelfAccepted, fairnessPassed, total
   const shown = waitingForPartner ? 'interested' : st
   const cost = totalBaht === null ? 'ยังไม่ทราบ' : formatGuaranteeBaht(totalBaht)
 
+  const btnWrap = 'h-auto min-h-12 px-4 py-2.5 text-center leading-snug whitespace-normal'
   const primary = (full: boolean) => {
     if (dock.requiresConsent)
       return (
-        <Button type="button" onClick={onOpenConsent} className={cn(full && 'w-full', 'order-first min-[480px]:order-none')}>
-          {dock.primaryActionLabel}
+        <Button type="button" onClick={onOpenConsent} className={cn(btnWrap, full && 'w-full', 'order-first min-[480px]:order-none')}>
+          <span>{dock.primaryActionLabel}</span>
         </Button>
       )
     if (!dock.primaryActionLabel) return null
     const to = st === 'completed' ? '/results' : '/campaigns'
     return (
-      <Button asChild className={cn(full && 'w-full', 'order-first min-[480px]:order-none')}>
+      <Button asChild className={cn(btnWrap, full && 'w-full', 'order-first min-[480px]:order-none')}>
         <Link to={to}>
-          {dock.primaryActionLabel}
+          <span>{dock.primaryActionLabel}</span>
           <ArrowRight data-icon="inline-end" />
         </Link>
       </Button>
@@ -49,15 +50,15 @@ export function StickyDecisionDock({ plan, isSelfAccepted, fairnessPassed, total
   }
   const decline = (full: boolean) =>
     dock.canDecline && (
-      <Button type="button" variant="outline" onClick={onDecline} className={cn('border-2 border-ink', full && 'w-full')}>
-        {dock.declineLabel}
+      <Button type="button" variant="outline" onClick={onDecline} className={cn(btnWrap, 'border-2 border-ink', full && 'w-full')}>
+        <span>{dock.declineLabel}</span>
       </Button>
     )
   const reopen = (full: boolean) =>
     st === 'declined' && (
-      <Button type="button" variant="outline" onClick={onReopen} className={cn(full && 'w-full')}>
+      <Button type="button" variant="outline" onClick={onReopen} className={cn(btnWrap, full && 'w-full')}>
         <RotateCcw data-icon="inline-start" />
-        เปลี่ยนใจ ดูแผนอีกครั้ง
+        <span>เปลี่ยนใจ ดูแผนอีกครั้ง</span>
       </Button>
     )
 
@@ -74,15 +75,15 @@ export function StickyDecisionDock({ plan, isSelfAccepted, fairnessPassed, total
             <p className="text-[14px] text-muted-foreground">ข้อสมมุติของแผนตัวอย่าง</p>
           </div>
         </div>
-        <p className="mt-4 flex items-center gap-2 text-[15px]">
-          <ShieldCheck className={cn('size-5 shrink-0', fairnessPassed ? 'text-link' : 'text-warn')} aria-hidden="true" />
-          {fairnessPassed ? 'ผ่านการตรวจความเป็นธรรมแล้ว' : 'ยังตรวจความเป็นธรรมไม่ครบ ดูรายละเอียดด้านล่าง'}
+        <p className="mt-4 flex items-start gap-2.5 text-[15px] leading-snug">
+          <ShieldCheck className={cn('mt-0.5 size-5 shrink-0', fairnessPassed ? 'text-link' : 'text-warn')} aria-hidden="true" />
+          <span>{fairnessPassed ? 'ผ่านการตรวจความเป็นธรรมแล้ว' : 'ยังตรวจความเป็นธรรมไม่ครบ ดูรายละเอียดด้านล่าง'}</span>
         </p>
 
         <div className="mt-6 flex flex-col gap-3">
           {waitingForPartner && (
-            <p className="flex items-start gap-2 rounded-lg bg-accent px-4 py-3 text-[15px]">
-              <Check className="mt-1 size-4 shrink-0 text-link" strokeWidth={3} aria-hidden="true" />
+            <p className="flex items-start gap-2.5 rounded-lg bg-accent px-4 py-3 text-[15px] leading-snug">
+              <Check className="mt-0.5 size-4 shrink-0 text-link" strokeWidth={3} aria-hidden="true" />
               <span>คุณยืนยันแล้ว รอร้านคู่ค้ายืนยันเงื่อนไขฉบับเดียวกัน</span>
             </p>
           )}
@@ -103,7 +104,7 @@ export function StickyDecisionDock({ plan, isSelfAccepted, fairnessPassed, total
             <span className="flex items-center gap-2"><Wallet className="size-5 text-link" aria-hidden="true" />ร้านคุณจ่ายเพิ่ม <strong className="figure text-[18px]">{cost}</strong></span>
             {waitingForPartner && <span className="flex items-center gap-1 font-semibold text-link"><Check className="size-4" strokeWidth={3} aria-hidden="true" />ยืนยันแล้ว</span>}
           </p>
-          <div className={cn('grid gap-2 [&_[data-slot=button]]:h-auto [&_[data-slot=button]]:min-h-12 [&_[data-slot=button]]:px-3 [&_[data-slot=button]]:py-2 [&_[data-slot=button]]:text-center [&_[data-slot=button]]:leading-tight [&_[data-slot=button]]:whitespace-normal', dock.canDecline && dock.primaryActionLabel ? 'grid-cols-1 min-[480px]:grid-cols-2' : 'grid-cols-1')}>
+          <div className={cn('grid gap-2 [&_[data-slot=button]]:h-auto [&_[data-slot=button]]:min-h-12 [&_[data-slot=button]]:px-4 [&_[data-slot=button]]:py-2.5 [&_[data-slot=button]]:text-center [&_[data-slot=button]]:leading-snug [&_[data-slot=button]]:whitespace-normal', dock.canDecline && dock.primaryActionLabel ? 'grid-cols-1 min-[480px]:grid-cols-2' : 'grid-cols-1')}>
             {decline(true)}
             {primary(true)}
             {reopen(true)}

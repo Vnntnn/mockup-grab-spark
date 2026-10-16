@@ -137,7 +137,7 @@ function DialogFooter({
       className={cn(
         "-mx-6 -mb-6 mt-2 flex flex-col-reverse gap-3 rounded-b-2xl border-t border-border bg-secondary/40 p-6 sm:flex-row sm:justify-end",
         // long labels (English) wrap inside the button instead of widening the dialog; side by side, the buttons share one height
-        "[&_[data-slot=button]]:h-auto [&_[data-slot=button]]:min-h-12 [&_[data-slot=button]]:shrink [&_[data-slot=button]]:py-2 [&_[data-slot=button]]:text-center [&_[data-slot=button]]:whitespace-normal sm:[&>[data-slot=button]:not(:only-child)]:flex-1",
+        "[&_[data-slot=button]]:h-auto [&_[data-slot=button]]:min-h-12 [&_[data-slot=button]]:shrink [&_[data-slot=button]]:px-4 [&_[data-slot=button]]:py-2.5 [&_[data-slot=button]]:text-center [&_[data-slot=button]]:leading-snug [&_[data-slot=button]]:whitespace-normal sm:[&>[data-slot=button]:not(:only-child)]:flex-1",
         className
       )}
       {...props}
