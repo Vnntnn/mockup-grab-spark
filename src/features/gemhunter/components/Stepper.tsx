@@ -64,7 +64,7 @@ export function Stepper({ campaign }: { campaign: GemHunterCampaign }) {
                     </span>
                     <span
                       className={cn(
-                        'text-[13px] leading-normal whitespace-nowrap transition-colors md:text-[15px]',
+                        'text-center text-[13px] leading-tight transition-colors md:text-[15px] md:leading-normal md:whitespace-nowrap',
                         isActive ? 'font-bold text-foreground' : 'font-medium text-muted-foreground group-hover:text-foreground',
                       )}
                     >

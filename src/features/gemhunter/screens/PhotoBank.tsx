@@ -1,4 +1,5 @@
-import { useId, useRef, useState } from 'react'
+import { useId, useRef } from 'react'
+import { useKept } from '@/i18n/keep'
 import { Camera, Check, Clock, FlaskConical, Hand, Info, Lock, Send, ShieldCheck, Store, Ticket } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -124,14 +125,14 @@ function HunterForm() {
   const menu = c.menuAudit.items.map((i) => ({ name: i.menuItemName, price: merchant?.sampleMenu.find((m) => m.name === i.menuItemName)?.priceBaht }))
   const closed = closedReason(c.phase)
 
-  const [hunterId, setHunterId] = useState(HUNTERS[0])
-  const [menuItem, setMenuItem] = useState(menu[0]?.name ?? '')
-  const [rating, setRating] = useState(0)
-  const [review, setReview] = useState('')
-  const [photoLabel, setPhotoLabel] = useState(PHOTO_OPTIONS[0].label)
-  const [consent, setConsent] = useState(false)
-  const [error, setError] = useState<{ code: string; reason: string } | null>(null)
-  const [sent, setSent] = useState<string | null>(null)
+  const [hunterId, setHunterId] = useKept('hunter:id', HUNTERS[0])
+  const [menuItem, setMenuItem] = useKept('hunter:item', menu[0]?.name ?? '')
+  const [rating, setRating] = useKept('hunter:rating', 0)
+  const [review, setReview] = useKept('hunter:review', '')
+  const [photoLabel, setPhotoLabel] = useKept('hunter:photo', PHOTO_OPTIONS[0].label)
+  const [consent, setConsent] = useKept('hunter:consent', false)
+  const [error, setError] = useKept<{ code: string; reason: string } | null>('hunter:error', null)
+  const [sent, setSent] = useKept<string | null>('hunter:sent', null)
 
   const fieldError = (f: 'rating' | 'review' | 'photo' | 'consent') => (error && FIELD_OF[error.code] === f ? error.reason : null)
   const generalError = error && !FIELD_OF[error.code] ? error.reason : null
@@ -378,7 +379,7 @@ function MerchantBank() {
   const open = acceptsSubmissions(c.phase)
   const closed = closedReason(c.phase)
   // on a phone the first four show; the rest are one tap away (desktop always lists everything)
-  const [showAll, setShowAll] = useState(false)
+  const [showAll, setShowAll] = useKept('photos:showAll', false)
 
   const newest = [...c.submissions].reverse()
   const groups = (['mine', 'wait', 'done'] as const).map((g) => ({ g, items: newest.filter((s) => bankGroup(s) === g) })).filter((x) => x.items.length > 0)
@@ -425,7 +426,7 @@ function MerchantBank() {
         <EmptyNote
           Icon={Camera}
           action={
-            <Button asChild variant="ghost" className="-ml-3 h-11 gap-2 px-3 text-[15px] font-medium text-muted-foreground">
+            <Button asChild variant="ghost" className="-ml-3 h-auto min-h-11 gap-2 px-3 py-2 text-left text-[15px] font-medium whitespace-normal text-muted-foreground">
               <Link to="/gemhunter/photos?view=hunter">
                 <FlaskConical data-icon="inline-start" />
                 เฉพาะสาธิต: จำลองลูกค้าส่งรีวิว

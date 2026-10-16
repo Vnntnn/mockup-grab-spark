@@ -89,7 +89,7 @@ function DialogContent({
         data-slot="dialog-content"
         onCloseAutoFocus={restoreFocus}
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border border-border bg-card p-6 text-[17px] text-foreground shadow-[var(--shadow-lift)] duration-[var(--dur-overlay)] data-closed:duration-[var(--dur-micro)] outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] grid-cols-[minmax(0,1fr)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border border-border bg-card p-6 text-[17px] text-foreground shadow-[var(--shadow-lift)] duration-[var(--dur-overlay)] data-closed:duration-[var(--dur-micro)] outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
         {...props}
@@ -136,6 +136,8 @@ function DialogFooter({
       data-slot="dialog-footer"
       className={cn(
         "-mx-6 -mb-6 mt-2 flex flex-col-reverse gap-3 rounded-b-2xl border-t border-border bg-secondary/40 p-6 sm:flex-row sm:justify-end",
+        // long labels (English) wrap inside the button instead of widening the dialog; side by side, the buttons share one height
+        "[&_[data-slot=button]]:h-auto [&_[data-slot=button]]:min-h-12 [&_[data-slot=button]]:shrink [&_[data-slot=button]]:py-2 [&_[data-slot=button]]:text-center [&_[data-slot=button]]:whitespace-normal sm:[&>[data-slot=button]:not(:only-child)]:flex-1",
         className
       )}
       {...props}

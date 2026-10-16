@@ -20,6 +20,8 @@ vi.mock('radix-ui', async (importOriginal) => {
   }
 })
 
+vi.mock('@/components/ui/sonner', () => ({ Toaster: () => null })) // sonner's Toaster needs a DOM, the harness here has none
+
 describe('CustomerPairingRoute & Root Redirect', () => {
   const state = createInitialState('2026-10-16')
 
@@ -70,11 +72,11 @@ describe('CustomerPairingRoute & Root Redirect', () => {
         })
       )
     )
-    expect(html).toContain('ขั้นตอนที่ 1 จาก 2')
+    expect(html).toContain('เลือกจานหลักจาก')
     expect(html).toContain('ข้าวมันไก่ต้ม')
     expect(html).toContain('ข้าวมันไก่ทอด')
-    expect(html).toContain('sticky top-8') // desktop dock
-    expect(html).toContain('fixed bottom-0') // mobile dock
+    expect(html).toContain('sticky top-40') // desktop dock
+    expect(html).toContain('lg:hidden') // mobile dock
   })
 
   it('renders Step 3 select complement screen with preserved dish A and complement dishes', () => {
@@ -92,12 +94,13 @@ describe('CustomerPairingRoute & Root Redirect', () => {
         })
       )
     )
-    expect(html).toContain('ขั้นตอนที่ 2 จาก 2')
+    expect(html).toContain('เลือกของว่างจาก')
+    expect(html).toContain('คู่ที่กำลังเลือก') // the pinned pair progress
     expect(html).toContain('หมูสะเต๊ะ 10 ไม้')
     expect(html).toContain('ไก่ย่างสมุนไพร')
     expect(html).toContain('เปลี่ยนจานหลัก')
-    expect(html).toContain('sticky top-8')
-    expect(html).toContain('fixed bottom-0')
+    expect(html).toContain('sticky top-40')
+    expect(html).toContain('lg:hidden')
   })
 
   it('renders Step 4 result screen with selected dishes', () => {
@@ -121,6 +124,25 @@ describe('CustomerPairingRoute & Root Redirect', () => {
     expect(html).toContain('แชร์คู่เมนูนี้')
     expect(html).toContain('ไปยังหน้าร้านข้าวหอม')
     expect(html).toContain('ไปยังหน้าร้านหมูสะเต๊ะบ้านสวน')
+  })
+
+  it('renders exactly one h1 on every step (header title is not a heading)', () => {
+    const queries = [
+      'step=1',
+      'step=2',
+      'step=3&dishA=khao-man-gai-tom',
+      'step=4&dishA=khao-man-gai-tom&dishB=moo-satay-10',
+    ]
+    for (const q of queries) {
+      const html = renderToString(
+        React.createElement(
+          MemoryRouter,
+          { initialEntries: [`/pair/${DEFAULT_CAMPAIGN_ID}?${q}`] },
+          React.createElement(CustomerPairingRoute, { campaignId: DEFAULT_CAMPAIGN_ID, testState: state })
+        )
+      )
+      expect(html.match(/<h1[\s>]/g)?.length, q).toBe(1)
+    }
   })
 
   it('contains zero emojis in rendered views', () => {
@@ -207,7 +229,7 @@ describe('CustomerPairingRoute & Root Redirect', () => {
     expect(html).toContain('min-h-[48px]')
   })
 
-  it('renders clean default header title "คู่เมนูของคุณ" on Step 4 without full share text', () => {
+  it('never puts the share title in the page on Step 4', () => {
     const html = renderToString(
       React.createElement(
         MemoryRouter,
@@ -222,7 +244,6 @@ describe('CustomerPairingRoute & Root Redirect', () => {
         })
       )
     )
-    expect(html).toContain('คู่เมนูของคุณ')
     expect(html).not.toContain('คู่เมนูที่คุณเลือก - GemBond')
   })
 

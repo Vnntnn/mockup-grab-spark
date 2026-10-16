@@ -1,3 +1,5 @@
+import { getLang } from '@/i18n/lang'
+
 const noon = (iso: string) => new Date(`${iso}T12:00:00Z`)
 
 export function addDays(iso: string, days: number): string {
@@ -12,11 +14,12 @@ export function todayISO(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-const dayFmt = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short', timeZone: 'UTC' })
-const fullFmt = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+const loc = () => (getLang() === 'en' ? 'en-GB' : 'th-TH')
+const dayFmt = () => new Intl.DateTimeFormat(loc(), { day: 'numeric', month: 'short', timeZone: 'UTC' })
+const fullFmt = () => new Intl.DateTimeFormat(loc(), { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 
-export const fmtDay = (iso: string) => dayFmt.format(noon(iso.slice(0, 10)))
-export const fmtFull = (iso: string) => fullFmt.format(noon(iso.slice(0, 10)))
+export const fmtDay = (iso: string) => dayFmt().format(noon(iso.slice(0, 10)))
+export const fmtFull = (iso: string) => fullFmt().format(noon(iso.slice(0, 10)))
 export const fmtRange = (r: { start: string; end: string }) => `${fmtDay(r.start)} – ${fmtDay(r.end)}`
 
 /** Whole days from a to b (b - a). */

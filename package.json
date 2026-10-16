@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview",
+    "i18n:list": "node scripts/i18n-extract.mjs",
     "deploy": "npm run build && npx wrangler deploy"
   },
   "dependencies": {

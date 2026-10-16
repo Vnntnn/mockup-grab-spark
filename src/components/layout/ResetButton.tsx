@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useApp } from '@/app/store'
@@ -30,6 +30,7 @@ export function ResetButton({ variant = 'outline', className }: { variant?: 'out
               ไม่รีเซ็ต
             </Button>
             <Button
+              variant="destructive"
               className="h-11 text-[15px]"
               onClick={() => {
                 dispatch({ type: 'reset', today: todayISO() })

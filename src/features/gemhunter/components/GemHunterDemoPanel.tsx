@@ -1,7 +1,9 @@
+import { DemoCustomerLinks } from '@/components/layout/DemoCustomerLinks'
+import { DemoRestart } from '@/components/layout/DemoRestart'
 import { useState } from 'react'
 import { FlaskConical, RotateCcw } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -54,12 +56,14 @@ export function GemHunterDemoPanel() {
             <span className="hidden sm:inline">เครื่องมือสาธิต</span>
           </Button>
         </SheetTrigger>
-        <SheetContent className="overflow-y-auto p-5">
+        <SheetContent className="overflow-y-auto p-5 [&_[data-slot=button]]:h-auto [&_[data-slot=button]]:min-h-11 [&_[data-slot=button]]:py-2 [&_[data-slot=button]]:text-left [&_[data-slot=button]]:whitespace-normal">
           <SheetHeader className="p-0 pr-10">
             <SheetTitle className="text-xl font-bold">เครื่องมือสาธิต GemHunter</SheetTitle>
             <SheetDescription className="text-[15px]">สำหรับผู้นำเสนอเท่านั้น ใช้จำลองสิ่งที่ลูกค้าและผู้ตรวจสอบจะทำ ไม่ใช่ฟังก์ชันของร้านจริง</SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-6">
+            <DemoRestart />
+            <DemoCustomerLinks />
             <p className="flex flex-wrap items-center gap-2 text-[15px] text-muted-foreground">
               สถานะตอนนี้ <PhaseBadge phase={state.campaign.phase} />
             </p>
@@ -74,11 +78,11 @@ export function GemHunterDemoPanel() {
             </section>
 
             <div className="flex flex-col gap-2 border-t pt-5">
-              <Button variant="outline" className="h-11 justify-start px-4 text-[15px]" onClick={() => setConfirmReset(true)}>
+              <Button variant="outline" className="h-auto min-h-11 justify-start px-4 py-2 text-left text-[15px] whitespace-normal" onClick={() => setConfirmReset(true)}>
                 <RotateCcw data-icon="inline-start" />
-                รีเซ็ตเดโม GemHunter
+                <span>รีเซ็ตเดโม GemHunter</span>
               </Button>
-              <Button asChild variant="ghost" className="h-11 justify-start px-4 text-[15px]">
+              <Button asChild variant="ghost" className="h-auto min-h-11 justify-start px-4 py-2 text-left text-[15px] whitespace-normal">
                 <Link to="/dashboard">กลับไปต้นแบบ GemBond</Link>
               </Button>
             </div>
@@ -99,6 +103,7 @@ export function GemHunterDemoPanel() {
               ไม่รีเซ็ต
             </Button>
             <Button
+              variant="destructive"
               className="h-11 text-[15px]"
               onClick={() => {
                 dispatch({ type: 'reset' })

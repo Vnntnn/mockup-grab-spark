@@ -4,6 +4,7 @@ import { Gem } from '@/components/GemMark'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyArt } from '@/components/visual'
 import { StatusBadge } from '@/components/status/StatusBadge'
+import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { useApp } from '@/app/store'
 import { headlinePlan, partnerOf, visiblePlans } from '@/app/selectors'
@@ -26,10 +27,13 @@ export function PlansList() {
       {plans.length === 0 ? (
         <Empty className="surface">
           <EmptyHeader>
-            <EmptyArt className="mx-auto" />
+            <EmptyArt kind="plans" className="mx-auto" />
             <EmptyTitle className="text-[22px]">ยังไม่มีแผน</EmptyTitle>
             <EmptyDescription className="text-[17px]">เมื่อมีร้านที่เหมาะ เราจะเตรียมแผนให้ที่นี่</EmptyDescription>
           </EmptyHeader>
+          <Button asChild variant="outline" className="h-11 text-[15px]">
+            <Link to="/opportunities">ดูแผนที่แนะนำ</Link>
+          </Button>
         </Empty>
       ) : (
         <div className="flex flex-col gap-10">

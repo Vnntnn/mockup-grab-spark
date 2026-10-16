@@ -1,29 +1,18 @@
-import { SimulatedBadge } from '@/components/SimulatedBadge'
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface DishSvgArtProps {
   slug: string
-  size?: 'sm' | 'md' | 'lg'
   className?: string
   standaloneLabel?: string
 }
 
 /* ---------------- Shared SVG building blocks ---------------- */
 
-function TableBackground() {
-  return (
-    <g>
-      <rect width="160" height="120" fill="#ede5d8" />
-      <path d="M0,0 H160 V26 L0,48 Z" fill="#f5ede0" opacity="0.75" />
-      <path d="M0,98 L160,72 V120 H0 Z" fill="#f5ede0" opacity="0.45" />
-    </g>
-  )
-}
-
 function Plate() {
   return (
     <g>
-      <ellipse cx="82" cy="65" rx="52" ry="46" fill="#1e1810" opacity="0.08" />
+      <ellipse cx="81" cy="64" rx="50" ry="45" fill="#16241c" opacity="0.1" />
       <ellipse cx="80" cy="60" rx="48" ry="43" fill="#fbf8f2" stroke="#dfd7c6" strokeWidth="1.8" />
       <ellipse cx="80" cy="60" rx="40" ry="36" fill="#f6efe4" stroke="#e6decb" strokeWidth="1" />
     </g>
@@ -84,7 +73,7 @@ function DippingBowl({
 function RiceMound({ cx = 70, cy = 60, rx = 28, ry = 22 }: { cx?: number; cy?: number; rx?: number; ry?: number }) {
   return (
     <g>
-      <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#faf5e9" stroke="#ebe1cd" strokeWidth="1.2" />
+      <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#fffaf0" stroke="#cfbf98" strokeWidth="1.6" />
       {[
         [-16, -6], [-6, -11], [6, -8], [15, -4],
         [-12, 4], [0, 2], [10, 5], [-4, 11], [8, 11],
@@ -126,33 +115,26 @@ function CorianderSprig({ cx, cy }: { cx: number; cy: number }) {
 /* ---------------- 1. Khao Man Gai Tom (ข้าวมันไก่ต้ม) ---------------- */
 
 function KhaoManGaiTom() {
+  // sliced poached chicken, laid flat and fanned over the rice: pale meat with a thin golden skin edge
   const slices = [
-    { x: 50, y: 44, rot: -14, w: 11, h: 22 },
-    { x: 61, y: 47, rot: -10, w: 11, h: 24 },
-    { x: 72, y: 50, rot: -6, w: 11, h: 24 },
-    { x: 83, y: 54, rot: -2, w: 11, h: 22 },
+    { x: 49, y: 56, rot: -28 },
+    { x: 59, y: 51, rot: -16 },
+    { x: 70, y: 48, rot: -4 },
+    { x: 81, y: 49, rot: 10 },
+    { x: 91, y: 54, rot: 24 },
   ]
 
   return (
     <g>
       <RiceMound cx={70} cy={60} rx={29} ry={23} />
-      <CucumberSlice cx={44} cy={76} rot={15} />
-      <CucumberSlice cx={53} cy={82} rot={-10} />
+      <CucumberSlice cx={44} cy={78} rot={15} />
+      <CucumberSlice cx={53} cy={84} rot={-10} />
 
-      {/* Tender boiled chicken slices */}
       {slices.map((s, i) => (
         <g key={i} transform={`translate(${s.x} ${s.y}) rotate(${s.rot})`}>
-          <rect x={-s.w / 2} y={-s.h / 2} width={s.w} height={s.h} rx="4" fill="#fcf8f0" stroke="#d8c8ad" strokeWidth="1" />
-          {/* Pale golden poached skin edge */}
-          <path
-            d={`M${-s.w / 2 + 1},${-s.h / 2 + 3} Q${0},${-s.h / 2 + 1} ${s.w / 2 - 1},${-s.h / 2 + 3}`}
-            stroke="#d4b172"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            fill="none"
-          />
-          {/* Delicate moisture highlight */}
-          <line x1={-s.w / 4} y1={-s.h / 4} x2={s.w / 4} y2={-s.h / 4} stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
+          <ellipse rx="13" ry="7.2" fill="#fbf1d6" stroke="#c9a15a" strokeWidth="1.2" />
+          <path d="M-11,-3.2 Q0,-7.4 11,-3.2" stroke="#e1bd73" strokeWidth="2" strokeLinecap="round" fill="none" />
+          <line x1="-6" y1="1.6" x2="5" y2="1.6" stroke="#ffffff" strokeWidth="1.1" strokeLinecap="round" opacity="0.7" />
         </g>
       ))}
 
@@ -180,31 +162,32 @@ function KhaoManGaiTom() {
 /* ---------------- 2. Khao Man Gai Tod (ข้าวมันไก่ทอด) ---------------- */
 
 function KhaoManGaiTod() {
+  // boneless fried chicken cut into strips and laid across the rice: wide, flat, crumb-coated
   const slices = [
-    { x: 50, y: 44, rot: -14, w: 12, h: 22 },
-    { x: 61, y: 47, rot: -10, w: 12, h: 24 },
-    { x: 72, y: 50, rot: -6, w: 12, h: 24 },
-    { x: 83, y: 54, rot: -2, w: 12, h: 22 },
+    { x: 52, y: 54, rot: -26, w: 22, h: 11 },
+    { x: 63, y: 49, rot: -12, w: 22, h: 11 },
+    { x: 75, y: 48, rot: 4, w: 22, h: 11 },
+    { x: 86, y: 53, rot: 20, w: 22, h: 11 },
   ]
 
   return (
     <g>
-      <RiceMound cx={70} cy={60} rx={29} ry={23} />
-      <CucumberSlice cx={44} cy={76} rot={15} />
-      <CucumberSlice cx={53} cy={82} rot={-10} />
+      <RiceMound cx={70} cy={62} rx={29} ry={23} />
+      <CucumberSlice cx={44} cy={78} rot={15} />
+      <CucumberSlice cx={53} cy={84} rot={-10} />
 
-      {/* Crispy golden fried chicken cutlet slices */}
       {slices.map((s, i) => (
         <g key={i} transform={`translate(${s.x} ${s.y}) rotate(${s.rot})`}>
-          {/* Crispy golden-brown crumb shell */}
-          <rect x={-s.w / 2} y={-s.h / 2} width={s.w} height={s.h} rx="4" fill="#c46816" stroke="#8c4308" strokeWidth="1" />
-          {/* Juicy tender meat core */}
-          <rect x={-s.w / 2 + 1.8} y={-s.h / 2 + 2} width={s.w - 3.6} height={s.h - 4} rx="2" fill="#fef5e6" />
-          {/* Crispy crumb crunch texture */}
-          <line x1={-s.w / 2 + 1} y1={-s.h / 2 + 1.5} x2={s.w / 2 - 1} y2={-s.h / 2 + 1.5} stroke="#f6ca68" strokeWidth="1.6" strokeLinecap="round" />
-          <line x1={-s.w / 2 + 1} y1={s.h / 2 - 1.5} x2={s.w / 2 - 1} y2={s.h / 2 - 1.5} stroke="#d97d24" strokeWidth="1.6" strokeLinecap="round" />
-          {[[-2, -3], [1, 2], [-1, 5], [2, -5]].map(([bx, by], bi) => (
-            <circle key={bi} cx={bx} cy={by} r="0.75" fill="#d88022" />
+          <path
+            d={`M${-s.w / 2},0 Q${-s.w / 2 + 2},${-s.h / 2 - 1} 0,${-s.h / 2} Q${s.w / 2 - 2},${-s.h / 2 - 1} ${s.w / 2},1 Q${s.w / 2 - 3},${s.h / 2 + 1} 0,${s.h / 2} Q${-s.w / 2 + 2},${s.h / 2 + 1} ${-s.w / 2},0Z`}
+            fill="#d98a22"
+            stroke="#7c3a06"
+            strokeWidth="1.3"
+            strokeLinejoin="round"
+          />
+          <path d={`M${-s.w / 2 + 4},${-s.h / 2 + 3} Q0,${-s.h / 2 - 0.5} ${s.w / 2 - 4},${-s.h / 2 + 3}`} stroke="#fbe3a8" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+          {[[-6, -1], [-1, 2], [4, -1], [7, 2], [1, -3], [-4, 3]].map(([bx, by], bi) => (
+            <circle key={bi} cx={bx} cy={by} r="0.9" fill={bi % 2 ? '#8e4a0c' : '#f2b64f'} />
           ))}
         </g>
       ))}
@@ -305,22 +288,22 @@ function KhaoNaGai() {
 /* ---------------- 4. Moo Satay 10 (หมูสะเต๊ะ 10 ไม้) ---------------- */
 
 function MooSatay10() {
-  const skewers = [-16, -8, 0, 8, 16]
+  // ten sticks, counted: the name promises "10 ไม้", so the picture shows exactly ten
+  const skewers = Array.from({ length: 10 }, (_, i) => -25.2 + i * 5.6)
 
   return (
     <g>
-      {/* 5 skewered pork satay sticks */}
-      <g transform="translate(68 60) rotate(-18)">
+      <g transform="translate(68 60) rotate(-16)">
         {skewers.map((y, idx) => (
           <g key={idx} transform={`translate(0 ${y})`}>
-            {/* Bamboo stick */}
-            <rect x="-38" y="-1" width="76" height="2" rx="1" fill="#d8b07a" />
-            {/* Meat chunks */}
-            {[-25, -14, -3, 8].map((x, mi) => (
+            {/* bamboo stick */}
+            <rect x="-28" y="-0.8" width="56" height="1.6" rx="0.8" fill="#d8b07a" />
+            {/* pork pieces */}
+            {[-17, -7, 3].map((x, mi) => (
               <g key={mi}>
-                <rect x={x} y="-4.2" width="11.5" height="8.4" rx="3.4" fill="#c9772b" />
-                <rect x={x + 1.5} y="-3.4" width="7.8" height="2.2" rx="1.1" fill="#ecad58" />
-                <rect x={x + 7.5} y="-4.2" width="1.8" height="8.4" fill="#632e0c" opacity="0.5" />
+                <rect x={x} y="-2.7" width="9" height="5.4" rx="2.6" fill="#c9772b" />
+                <rect x={x + 1.2} y="-2.1" width="5.8" height="1.5" rx="0.75" fill="#ecad58" />
+                <rect x={x + 6} y="-2.7" width="1.3" height="5.4" fill="#632e0c" opacity="0.5" />
               </g>
             ))}
           </g>
@@ -371,6 +354,12 @@ function GrilledCut({ x, y, r, s = 1 }: { x: number; y: number; r: number; s?: n
       />
       {/* Grill char marks */}
       <path d="M-10,-9 L6,-13 M-12,-3 L10,-7 M-10,4 L8,0" stroke="#431904" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+      {/* Bone end: these are chicken pieces, not patties */}
+      <g>
+        <rect x="13" y="-2" width="13" height="5.4" rx="2.7" fill="#f6eedc" stroke="#c9b894" strokeWidth="1" />
+        <circle cx="26.5" cy="-1.6" r="3.3" fill="#f6eedc" stroke="#c9b894" strokeWidth="1" />
+        <circle cx="26.5" cy="3.4" r="3.3" fill="#f6eedc" stroke="#c9b894" strokeWidth="1" />
+      </g>
       {/* Roasted glaze sheen */}
       <path d="M-9,-13 C-3,-16 5,-15 10,-12" stroke="#f0aa5c" strokeWidth="1.6" strokeLinecap="round" fill="none" />
       {/* Herb specks */}
@@ -503,6 +492,143 @@ function GenericDishPlate() {
 
 /* ---------------- Food dispatcher ---------------- */
 
+/* ---------------- Drinks and desserts (top-down glass and bowl on the plate) ---------------- */
+
+function Glass({ liquid, rim = '#e9eeee', children }: { liquid: string; rim?: string; children?: ReactNode }) {
+  return (
+    <g>
+      <circle cx="80" cy="60" r="31" fill="#ffffff" stroke={rim} strokeWidth="2.4" />
+      <circle cx="80" cy="60" r="26.5" fill={liquid} />
+      {children}
+    </g>
+  )
+}
+
+function IceCube({ x, y, r = 0 }: { x: number; y: number; r?: number }) {
+  return <rect x={x} y={y} width="10" height="10" rx="2.4" fill="#ffffff" opacity="0.5" stroke="#ffffff" strokeWidth="0.8" transform={`rotate(${r} ${x + 5} ${y + 5})`} />
+}
+
+function Straw({ color }: { color: string }) {
+  return <rect x="86" y="30" width="5" height="34" rx="2.5" fill={color} transform="rotate(24 88 47)" />
+}
+
+function ThaiIcedTea() {
+  return (
+    <g>
+      <Glass liquid="#d9722a">
+        <path d="M60,56 C68,46 82,52 90,46 C96,42 100,50 98,58" stroke="#fbe9d2" strokeWidth="4.2" fill="none" strokeLinecap="round" opacity="0.95" />
+        <path d="M62,70 C72,64 82,72 94,66" stroke="#fbe9d2" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.75" />
+        <IceCube x={62} y={44} r={12} />
+        <IceCube x={84} y={72} r={-10} />
+      </Glass>
+      <Straw color="#3a2a1e" />
+    </g>
+  )
+}
+
+function LemonTea() {
+  return (
+    <g>
+      <Glass liquid="#d7a23a">
+        <IceCube x={64} y={72} r={8} />
+        <g transform="translate(70 52)">
+          <circle r="11" fill="#f5e27a" stroke="#c9ad2e" strokeWidth="1.6" />
+          <circle r="8.3" fill="#fbf0a8" />
+          {[0, 60, 120, 180, 240, 300].map((a) => (
+            <line key={a} x1="0" y1="0" x2={8 * Math.cos((a * Math.PI) / 180)} y2={8 * Math.sin((a * Math.PI) / 180)} stroke="#e3cf55" strokeWidth="1" />
+          ))}
+        </g>
+        <g transform="translate(92 66)">
+          <circle r="8.5" fill="#f5e27a" stroke="#c9ad2e" strokeWidth="1.5" />
+          <circle r="6.2" fill="#fbf0a8" />
+        </g>
+        <IceCube x={82} y={40} r={-14} />
+      </Glass>
+      <Straw color="#2c4a2a" />
+    </g>
+  )
+}
+
+function GreenMilkTea() {
+  return (
+    <g>
+      <Glass liquid="#9cc47a">
+        <path d="M58,60 C66,50 78,58 88,50 C96,44 102,54 98,62" stroke="#f2f7e6" strokeWidth="4.4" fill="none" strokeLinecap="round" opacity="0.95" />
+        <path d="M62,72 C70,66 84,74 96,68" stroke="#f2f7e6" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.7" />
+        <IceCube x={70} y={40} r={10} />
+        <IceCube x={64} y={66} r={-8} />
+      </Glass>
+      <Straw color="#f0f0ea" />
+    </g>
+  )
+}
+
+function Bowl({ milk, children }: { milk: string; children?: ReactNode }) {
+  return (
+    <g>
+      <circle cx="80" cy="60" r="33" fill="#ffffff" stroke="#d9d4c6" strokeWidth="2.4" />
+      <circle cx="80" cy="60" r="28" fill={milk} stroke="#eadfc5" strokeWidth="1" />
+      {children}
+    </g>
+  )
+}
+
+function BuaLoi() {
+  const balls: Array<[number, number, string]> = [
+    [64, 50, '#7a4a9a'], [76, 44, '#6aa84f'], [90, 50, '#e08a3c'], [58, 64, '#e08a3c'], [72, 58, '#7a4a9a'],
+    [86, 64, '#6aa84f'], [66, 76, '#6aa84f'], [80, 74, '#7a4a9a'], [94, 74, '#e08a3c'],
+  ]
+  return (
+    <Bowl milk="#f6ead0">
+      {balls.map(([x, y, c], i) => (
+        <circle key={i} cx={x} cy={y} r="6" fill={c} stroke="#ffffff" strokeWidth="1" opacity="0.95" />
+      ))}
+      <g transform="translate(78 60)">
+        <ellipse rx="9" ry="8" fill="#ffffff" stroke="#e6dcc3" strokeWidth="1" />
+        <circle r="4.6" fill="#f2b630" />
+      </g>
+    </Bowl>
+  )
+}
+
+function MangoStickyRice() {
+  return (
+    <g>
+      <ellipse cx="64" cy="62" rx="22" ry="17" fill="#fbf8ee" stroke="#e4dcc6" strokeWidth="1.4" />
+      {[[-10, -4], [0, -8], [10, -3], [-6, 4], [6, 6], [-14, 6]].map(([dx, dy], i) => (
+        <ellipse key={i} cx={64 + dx} cy={62 + dy} rx="3.2" ry="1.6" fill="#ece3cb" transform={`rotate(${dx * 5} ${64 + dx} ${62 + dy})`} />
+      ))}
+      {[0, 1, 2, 3].map((i) => (
+        <g key={i} transform={`translate(${86 + i * 3} ${42 + i * 11}) rotate(${-24 + i * 8})`}>
+          <path d="M-16,-6 C-6,-12 8,-10 16,-4 C10,6 -6,8 -16,-6Z" fill="#f3b72e" stroke="#c98a14" strokeWidth="1.2" />
+          <path d="M-10,-4 C-2,-8 6,-7 11,-3" stroke="#fbd877" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+        </g>
+      ))}
+      {[[58, 56], [66, 60], [70, 52], [62, 66]].map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r="1.1" fill="#2e2a24" />
+      ))}
+    </g>
+  )
+}
+
+function LodChong() {
+  const noodles = [
+    'M56,52 C62,46 68,58 74,52 C80,46 84,58 90,52',
+    'M54,62 C60,56 66,68 72,62 C78,56 84,68 92,62',
+    'M58,72 C64,66 70,78 76,72 C82,66 88,76 94,70',
+  ]
+  return (
+    <Bowl milk="#fbf3dc">
+      {noodles.map((d, i) => (
+        <path key={i} d={d} stroke="#5fae4f" strokeWidth="5" fill="none" strokeLinecap="round" />
+      ))}
+      <IceCube x={70} y={40} r={14} />
+      <IceCube x={88} y={72} r={-8} />
+      <circle cx="94" cy="48" r="3" fill="#f0d9a8" />
+    </Bowl>
+  )
+}
+
 function FoodIllustration({ slug }: { slug: string }) {
   switch (slug) {
     case 'khao-man-gai-tom':
@@ -517,6 +643,18 @@ function FoodIllustration({ slug }: { slug: string }) {
       return <GaiYang />
     case 'peek-gai-tod':
       return <PeekGaiTod />
+    case 'thai-iced-tea':
+      return <ThaiIcedTea />
+    case 'lemon-tea':
+      return <LemonTea />
+    case 'green-milk-tea':
+      return <GreenMilkTea />
+    case 'bua-loi':
+      return <BuaLoi />
+    case 'mango-sticky-rice':
+      return <MangoStickyRice />
+    case 'lod-chong':
+      return <LodChong />
     default:
       return <GenericDishPlate />
   }
@@ -524,48 +662,26 @@ function FoodIllustration({ slug }: { slug: string }) {
 
 /* ---------------- Main Component ---------------- */
 
-export function DishSvgArt({
-  slug,
-  size = 'md',
-  className,
-  standaloneLabel,
-}: DishSvgArtProps) {
-  const sizeClasses: Record<'sm' | 'md' | 'lg', string> = {
-    sm: 'w-24 aspect-[4/3]',
-    md: 'w-full aspect-[4/3] max-w-sm',
-    lg: 'w-full aspect-[4/3] max-w-md',
-  }
-
-  const svgA11yProps = standaloneLabel
-    ? { role: 'img' as const, 'aria-label': standaloneLabel }
-    : { 'aria-hidden': 'true' as const }
-
+/** The bare plate drawing alone (no figure, no caption). Callers own the simulation caption. */
+export function DishPlate({ slug, className, label }: { slug: string; className?: string; label?: string }) {
+  const a11y = label ? { role: 'img' as const, 'aria-label': label } : { 'aria-hidden': 'true' as const }
   return (
-    <div
-      className={cn(
-        'relative overflow-hidden rounded-2xl border border-border/60 bg-[#ede5d8]',
-        sizeClasses[size],
-        className,
-      )}
-    >
-      <svg
-        viewBox="0 0 160 120"
-        className="block h-full w-full select-none"
-        preserveAspectRatio="xMidYMid slice"
-        {...svgA11yProps}
-      >
-        <TableBackground />
-        <Plate />
-        <FoodIllustration slug={slug} />
-      </svg>
-      {/* Simulation badge is unconditionally rendered */}
-      <div aria-hidden="true" className="pointer-events-none absolute bottom-2 left-2 z-10">
-        <SimulatedBadge
-          text="ภาพจำลอง"
-          variant="pill"
-          className={size === 'sm' ? 'scale-75 origin-bottom-left text-[11px] px-2 py-0' : 'text-[12px]'}
-        />
-      </div>
-    </div>
+    <svg viewBox="22 12 114 102" className={cn('block h-auto w-full select-none overflow-visible', className)} {...a11y}>
+      <Plate />
+      <FoodIllustration slug={slug} />
+    </svg>
+  )
+}
+
+/**
+ * One dish as a bare top-down plate, no tile behind it. The simulation caption is part of the figure (a figcaption
+ * under the plate), never an overlay on the food, and stays in the accessibility tree.
+ */
+export function DishSvgArt({ slug, className, standaloneLabel }: DishSvgArtProps) {
+  return (
+    <figure className={cn('m-0 flex w-full flex-col gap-1', className)}>
+      <DishPlate slug={slug} label={standaloneLabel} />
+      <figcaption className="pr-caption text-center opacity-90">ภาพจำลอง</figcaption>
+    </figure>
   )
 }

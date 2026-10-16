@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useKept } from '@/i18n/keep'
 import { CheckCircle2 } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { PageHeader } from '@/components/PageHeader'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -18,10 +18,10 @@ export function Support() {
   const { state, dispatch } = useApp()
   const [params] = useSearchParams()
   const planId = params.get('plan') && state.plans[params.get('plan')!] ? params.get('plan') : null
-  const [category, setCategory] = useState<SupportCategoryId | ''>('')
-  const [note, setNote] = useState('')
-  const [error, setError] = useState(false)
-  const [sent, setSent] = useState<SupportCategoryId | null>(null)
+  const [category, setCategory] = useKept<SupportCategoryId | ''>('support:category', '')
+  const [note, setNote] = useKept('support:note', '')
+  const [error, setError] = useKept('support:error', false)
+  const [sent, setSent] = useKept<SupportCategoryId | null>('support:sent', null)
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()

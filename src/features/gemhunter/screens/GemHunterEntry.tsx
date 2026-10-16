@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowRight, Check, CircleX, Info } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { INCENTIVE_NOTE } from '../components/copy'
@@ -265,6 +265,7 @@ export function GemHunterEntry() {
               ยังไม่ยกเลิก
             </Button>
             <Button
+              variant="destructive"
               className="h-11 text-[15px]"
               onClick={() => {
                 if (run({ type: 'cancel' })) toast.info('ยกเลิกแคมเปญแล้ว ร้านของคุณขายตามปกติ')

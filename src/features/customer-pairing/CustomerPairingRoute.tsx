@@ -1,20 +1,28 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, MemoryRouter, useParams, useInRouterContext } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, MemoryRouter, useNavigate, useParams, useInRouterContext } from 'react-router-dom'
 import { AlertCircle } from 'lucide-react'
-import { toast } from 'sonner'
+import { SiteFooter } from '@/components/SiteFooter'
+import { LangToggle } from '@/i18n/LangToggle'
+import { toast } from '@/i18n/toast'
 import { Button } from '@/components/ui/button'
+import { Toaster } from '@/components/ui/sonner'
 import { baht } from '@/lib/format'
 import { useApp } from '@/app/store'
 import type { AppState } from '@/domain/types'
 import { DEFAULT_CAMPAIGN_ID, resolvePairingCampaign } from './data'
+import { withViewTransition } from './motion'
+import { sharePairingLink } from './share'
 import { usePairingNavigation } from './hooks/usePairingNavigation'
+import { PairProgress } from './components/PairProgress'
 import { PairingHeader } from './components/PairingHeader'
+import { CustomerDemoTools } from './components/CustomerDemoTools'
 import { SelectionDock } from './components/SelectionDock'
 import { StoreModal } from './components/StoreModal'
 import { Screen1Discover } from './screens/Screen1Discover'
 import { Screen2SelectMain } from './screens/Screen2SelectMain'
 import { Screen3SelectComplement } from './screens/Screen3SelectComplement'
 import { Screen4Result } from './screens/Screen4Result'
+import { shortName } from './network'
 import type { PairingCampaignData } from './types'
 
 export interface CustomerPairingRouteProps {
@@ -24,7 +32,11 @@ export interface CustomerPairingRouteProps {
 
 function RecoveryView() {
   return (
-    <div className="min-h-screen bg-[#FDFDFC] text-[#0A0A0A] font-['Sarabun',sans-serif] flex flex-col items-center justify-center p-6 text-center">
+    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col items-center justify-center p-6 text-center">
+      <div className="mb-4 flex items-center gap-2">
+        <LangToggle />
+        <CustomerDemoTools />
+      </div>
       <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 shadow-xs flex flex-col items-center gap-4">
         <div className="size-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">
           <AlertCircle className="size-6" aria-hidden="true" />
@@ -38,7 +50,11 @@ function RecoveryView() {
             ดูแคมเปญตัวอย่าง
           </Link>
         </Button>
+        <Link to="/pair" className="pr-body flex min-h-[48px] items-center font-semibold text-link decoration-1 underline underline-offset-[0.4em]">
+          ดูร้านและคู่ร้านทั้งหมด
+        </Link>
       </div>
+      <SiteFooter merchantLink className="mt-6 w-full max-w-md" />
     </div>
   )
 }
@@ -65,7 +81,12 @@ function CustomerPairingActive({
     }
   }, [nav.urlState.wasDemoted])
 
+  const navigate = useNavigate()
+  const goDiscovery = useCallback(() => navigate(`/pair?pairing=${data.campaignId}`), [navigate, data.campaignId])
   const [storeModalMerchant, setStoreModalMerchant] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current) }, [])
 
   const selectedDishA = useMemo(
     () => data.menuA.find((d) => d.slug === nav.urlState.dishA) ?? null,
@@ -79,11 +100,27 @@ function CustomerPairingActive({
 
   const summaryText2 = selectedDishA
     ? `เลือกแล้ว: ${selectedDishA.name} · ${baht(selectedDishA.priceBaht)}`
-    : 'ยังไม่ได้เลือกเมนู'
+    : 'กรุณาเลือก 1 รายการ'
 
-  const summaryText3 = selectedDishB
-    ? `เลือกแล้ว: ${selectedDishB.name} · ${baht(selectedDishB.priceBaht)}`
-    : 'ยังไม่ได้เลือกของว่าง'
+  const summaryText3 =
+    selectedDishA && selectedDishB
+      ? `${selectedDishA.name} + ${selectedDishB.name}`
+      : `เลือก${data.roleB.pick}เพื่อจับคู่`
+
+  // On a step change (not first paint): back to the top and focus the new heading, so keyboard and screen-reader users land on the new screen.
+  const dockStep = nav.urlState.step === 2 || nav.urlState.step === 3
+  const mainRef = useRef<HTMLElement>(null)
+  const prevStep = useRef(nav.urlState.step)
+  useEffect(() => {
+    if (prevStep.current === nav.urlState.step) return
+    prevStep.current = nav.urlState.step
+    window.scrollTo(0, 0)
+    const heading = mainRef.current?.querySelector('h1')
+    if (heading) {
+      heading.setAttribute('tabindex', '-1')
+      heading.focus({ preventScroll: true })
+    }
+  }, [nav.urlState.step])
 
   const shareTitle = nav.urlState.isSample
     ? 'คู่เมนูตัวอย่างสำหรับการสาธิต - GemBond'
@@ -102,53 +139,52 @@ function CustomerPairingActive({
         ? `${selectedDishA.name} x ${selectedDishB.name}`
         : shareTitle
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: shareTitle,
-          text: shareText,
-          url: shareUrl,
-        })
-        return
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          return
-        }
-        // Fallback to clipboard
-      }
+    const outcome = await sharePairingLink({ title: shareTitle, text: shareText, url: shareUrl })
+    if (outcome === 'copied') {
+      toast.success('คัดลอกลิงก์คู่เมนูนี้แล้ว')
+      setCopied(true)
+      if (copiedTimer.current) clearTimeout(copiedTimer.current)
+      copiedTimer.current = setTimeout(() => setCopied(false), 1800)
     }
-    if (navigator.clipboard) {
-      try {
-        await navigator.clipboard.writeText(shareUrl)
-        toast.success('คัดลอกลิงก์คู่เมนูนี้แล้ว')
-      } catch {
-        toast.error('ไม่สามารถคัดลอกลิงก์ได้')
-      }
-    }
+    else if (outcome === 'failed') toast.error('ไม่สามารถคัดลอกลิงก์ได้')
   }, [data.campaignId, nav.urlState, selectedDishA, selectedDishB, shareTitle])
 
   return (
-    <div className="min-h-screen bg-[#FDFDFC] text-[#0A0A0A] font-['Sarabun',sans-serif] flex flex-col">
-      <PairingHeader
-        step={nav.urlState.step}
-        onBack={nav.urlState.step > 1 ? nav.goBack : undefined}
-        onShare={nav.urlState.step === 4 ? handleShare : undefined}
-      />
+    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
+      {/* header and the pair being built stay pinned together while the menu scrolls beneath them */}
+      <div className="sticky top-0 z-30 bg-background">
+        <PairingHeader
+          step={nav.urlState.step}
+          onBack={nav.urlState.step > 1 ? nav.goBack : goDiscovery}
+        />
+        {dockStep && (
+          <div className="mx-auto w-full max-w-md md:max-w-2xl lg:max-w-6xl lg:px-6">
+            <PairProgress
+              data={data}
+              dishA={selectedDishA}
+              dishB={selectedDishB}
+              active={nav.urlState.step === 3 ? 'B' : 'A'}
+              onEditA={() => nav.goToStep(2)}
+            />
+          </div>
+        )}
+      </div>
 
-      <main className="flex-1">
+      <main ref={mainRef} className="flex-1 [&_h1]:outline-none">
         {nav.urlState.step === 1 && (
-          <div className="max-w-5xl mx-auto w-full px-4 py-4">
+          <div key="s1" className="mx-auto w-full max-w-md md:max-w-2xl lg:max-w-6xl lg:px-6">
             <Screen1Discover
               data={data}
-              onStart={nav.goToNextStep}
-              onLoadSample={nav.goToSample}
+              onStart={() => withViewTransition(nav.goToNextStep)}
+              onLoadSample={() => withViewTransition(nav.goToSample)}
+              onDiscover={goDiscovery}
             />
           </div>
         )}
 
         {nav.urlState.step === 2 && (
-          <div className="max-w-5xl mx-auto w-full px-4 py-4">
-            <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+          <div key="s2" className="mx-auto w-full max-w-md md:max-w-2xl lg:max-w-6xl lg:px-6">
+            <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-12">
               <div className="lg:col-span-7">
                 <Screen2SelectMain
                   data={data}
@@ -156,10 +192,15 @@ function CustomerPairingActive({
                   onSelect={(dish) => nav.selectDish('A', dish.slug)}
                 />
               </div>
-              <div className="hidden lg:block lg:col-span-5">
+              <div className="hidden lg:col-span-5 lg:block lg:pt-4">
                 <SelectionDock
                   variant="desktop-sidebar"
+                  dishA={selectedDishA}
+                  dishB={selectedDishB}
+                  slotA={{ restaurant: shortName(data.restaurantA.name), pick: data.roleA.pick }}
+                  slotB={{ restaurant: shortName(data.restaurantB.name), pick: data.roleB.pick }}
                   step={2}
+                  nextRestaurant={shortName(data.restaurantB.name)}
                   isEditing={nav.urlState.isEditing}
                   summaryText={summaryText2}
                   isEnabled={!!nav.urlState.dishA}
@@ -169,6 +210,7 @@ function CustomerPairingActive({
             </div>
             <SelectionDock
               step={2}
+              nextRestaurant={shortName(data.restaurantB.name)}
               isEditing={nav.urlState.isEditing}
               summaryText={summaryText2}
               isEnabled={!!nav.urlState.dishA}
@@ -178,25 +220,27 @@ function CustomerPairingActive({
         )}
 
         {nav.urlState.step === 3 && (
-          <div className="max-w-5xl mx-auto w-full px-4 py-4">
-            <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+          <div key="s3" className="mx-auto w-full max-w-md md:max-w-2xl lg:max-w-6xl lg:px-6">
+            <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-12">
               <div className="lg:col-span-7">
                 <Screen3SelectComplement
                   data={data}
-                  selectedDishA={selectedDishA}
                   selectedSlugB={nav.urlState.dishB}
                   onSelectB={(dish) => nav.selectDish('B', dish.slug)}
-                  onEditA={() => nav.goToStep(2)}
                 />
               </div>
-              <div className="hidden lg:block lg:col-span-5">
+              <div className="hidden lg:col-span-5 lg:block lg:pt-4">
                 <SelectionDock
                   variant="desktop-sidebar"
+                  dishA={selectedDishA}
+                  dishB={selectedDishB}
+                  slotA={{ restaurant: shortName(data.restaurantA.name), pick: data.roleA.pick }}
+                  slotB={{ restaurant: shortName(data.restaurantB.name), pick: data.roleB.pick }}
                   step={3}
                   isEditing={nav.urlState.isEditing}
                   summaryText={summaryText3}
                   isEnabled={!!nav.urlState.dishB}
-                  onNext={nav.goToNextStep}
+                  onNext={() => withViewTransition(nav.goToNextStep)}
                 />
               </div>
             </div>
@@ -205,13 +249,13 @@ function CustomerPairingActive({
               isEditing={nav.urlState.isEditing}
               summaryText={summaryText3}
               isEnabled={!!nav.urlState.dishB}
-              onNext={nav.goToNextStep}
+              onNext={() => withViewTransition(nav.goToNextStep)}
             />
           </div>
         )}
 
         {nav.urlState.step === 4 && selectedDishA && selectedDishB && (
-          <div className="max-w-5xl mx-auto w-full px-4 py-6">
+          <div key="s4" className="mx-auto w-full max-w-md md:max-w-2xl lg:max-w-6xl lg:px-6">
             <Screen4Result
               data={data}
               dishA={selectedDishA}
@@ -222,15 +266,25 @@ function CustomerPairingActive({
               onReset={nav.startOver}
               onOpenStore={(m) => setStoreModalMerchant(m)}
               onShare={handleShare}
+              copied={copied}
+              onDiscover={goDiscovery}
             />
           </div>
         )}
       </main>
+      <SiteFooter merchantLink className="mx-auto w-full max-w-6xl px-4" />
 
       <StoreModal
         isOpen={!!storeModalMerchant}
         onClose={() => setStoreModalMerchant(null)}
         merchantName={storeModalMerchant || ''}
+      />
+      {/* /pair lives outside AppShell, so it needs its own toaster. Only the bottom offset is set (a string offset would squeeze the sides); it clears the selection dock on steps 2 and 3. */}
+      <Toaster
+        toastOptions={{ classNames: { toast: '!rounded-[0.625rem] !border-0 !bg-ink !text-[15px] !text-white' } }}
+        position="bottom-center"
+        offset={{ bottom: dockStep ? '120px' : '24px' }}
+        mobileOffset={{ bottom: dockStep ? '120px' : '24px', left: '16px', right: '16px' }}
       />
     </div>
   )

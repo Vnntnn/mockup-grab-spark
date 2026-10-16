@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { apply, type Action } from '../domain'
 import { useGemHunter } from '../store'
 

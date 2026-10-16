@@ -210,7 +210,7 @@ function CampaignResultsView({ campaign, r }: { campaign: Campaign; r: CampaignR
         <p className="text-[22px] leading-snug font-bold text-ink">{next.title}</p>
         <p className="mt-2 max-w-[56ch] text-[17px]">{next.body}</p>
         <p className="mt-2 text-[14px] text-muted-foreground">คำแนะนำตามตัวเลขเท่านั้น ไม่รับประกันผล คุณเป็นผู้ตัดสินใจเสมอ</p>
-        <Button asChild variant={next.kind === 'add_costs' ? 'default' : 'outline'} className="mt-4 h-12 text-[17px] font-bold">
+        <Button asChild variant={next.kind === 'add_costs' ? 'default' : 'outline'} className="mt-4 h-auto min-h-12 max-w-full shrink py-2 whitespace-normal text-[17px] font-bold">
           <Link to={next.kind === 'add_costs' ? '/store' : '/opportunities'}>
             {next.kind === 'add_costs' ? 'ใส่ต้นทุนโดยประมาณ' : 'ดูร้านที่น่าสนใจอื่น ๆ'}
             <ArrowRight data-icon="inline-end" />
@@ -235,7 +235,7 @@ export function Results() {
       ) : (
         <Empty className="surface">
           <EmptyHeader>
-            <EmptyArt className="mx-auto" />
+            <EmptyArt kind="results" className="mx-auto" />
             <EmptyTitle className="text-[22px]">{active ? 'แคมเปญยังไม่จบ' : 'ยังไม่มีผลลัพธ์'}</EmptyTitle>
             <EmptyDescription className="text-[17px]">
               {active ? 'เมื่อแคมเปญจบ เราจะสรุปให้ที่นี่ ข้อมูลระหว่างทางยังไม่พอจะบอกว่าคุ้มหรือไม่' : 'เมื่อมีแคมเปญที่จบ ผลจะมาแสดงที่นี่ ซึ่งเป็นเรื่องปกติ'}

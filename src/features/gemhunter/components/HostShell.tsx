@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect } from 'react'
 import { ArrowRight, Gem } from 'lucide-react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { SiteFooter } from '@/components/SiteFooter'
+import { LangToggle } from '@/i18n/LangToggle'
 import { Toaster } from '@/components/ui/sonner'
 import { useGemHunter } from '../store'
 import { merchantOf } from '../data/seed'
@@ -48,7 +50,10 @@ export function HostShell() {
               <span className="text-muted-foreground"> · {merchant?.name ?? 'ร้านตัวอย่าง'}</span>
             </span>
           </p>
-          <GemHunterDemoPanel />
+          <div className="flex shrink-0 items-center gap-2">
+            <LangToggle />
+            <GemHunterDemoPanel />
+          </div>
         </div>
         <nav aria-label="ขั้นตอนของแคมเปญ" className="border-t">
           <div className="mx-auto max-w-6xl md:px-5">
@@ -80,10 +85,11 @@ export function HostShell() {
               </Link>
             </p>
           )}
+          <SiteFooter className="mt-12" />
         </main>
       </div>
 
-      <Toaster position="bottom-center" offset="32px" mobileOffset="24px" />
+      <Toaster position="bottom-center" offset={{ bottom: '32px', left: '16px', right: '16px' }} mobileOffset={{ bottom: '24px', left: '16px', right: '16px' }} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useKept } from '@/i18n/keep'
 import { Check, Store } from 'lucide-react'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -33,7 +33,7 @@ export function StoreProfile() {
   const { state, dispatch } = useApp()
   const me = selfOf(state)
   const patch = (p: Parameters<typeof dispatch>[0] extends infer A ? A extends { type: 'updateMerchant'; patch: infer P } ? P : never : never) => dispatch({ type: 'updateMerchant', patch: p })
-  const [costText, setCostText] = useState(state.variableCostPct === null ? '' : String(state.variableCostPct))
+  const [costText, setCostText] = useKept('store:cost', state.variableCostPct === null ? '' : String(state.variableCostPct))
   const costNum = costText === '' ? null : Number(costText)
   const costInvalid = costNum !== null && (Number.isNaN(costNum) || costNum < 0 || costNum > 100)
   const recCount = matching(state).recommendations.length
@@ -72,11 +72,11 @@ export function StoreProfile() {
               <FieldLegend variant="label">เวลาเปิดขาย</FieldLegend>
               <div className="grid grid-cols-2 gap-3">
                 <Field>
-                  <FieldLabel htmlFor="open">เปิด</FieldLabel>
+                  <FieldLabel htmlFor="open">เปิดร้าน</FieldLabel>
                   <TimeSelect id="open" value={me.operatingHours.open} onChange={(v) => patch({ operatingHours: { ...me.operatingHours, open: v } })} />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="close">ปิด</FieldLabel>
+                  <FieldLabel htmlFor="close">ปิดร้าน</FieldLabel>
                   <TimeSelect id="close" value={me.operatingHours.close} onChange={(v) => patch({ operatingHours: { ...me.operatingHours, close: v } })} />
                 </Field>
               </div>

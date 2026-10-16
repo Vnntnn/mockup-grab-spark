@@ -15,7 +15,8 @@ import { Results } from '@/features/results/Results'
 import { StoreProfile } from '@/features/store-profile/StoreProfile'
 import { Support } from '@/features/support/Support'
 import { CustomerPairingRoute } from '@/features/customer-pairing/CustomerPairingRoute'
-import { DEFAULT_CAMPAIGN_ID } from '@/features/customer-pairing/data'
+import { CustomerDiscovery } from '@/features/customer-pairing/discovery/CustomerDiscovery'
+import { LangRoot } from '@/i18n/LangRoot'
 import { AppProvider } from './store'
 
 function NotFound() {
@@ -64,11 +65,12 @@ export function App() {
       <AppProvider>
         <GemHunterProvider>
           <BrowserRouter>
+            <LangRoot>
             <Routes>
               {/* GemHunter lives in its own host-platform shell, outside the GemBond AppShell */}
               <Route path="/gemhunter/*" element={<GemHunterRoutes />} />
               {/* Customer food pairing customer canvas, outside merchant AppShell */}
-              <Route path="/pair" element={<Navigate to={`/pair/${DEFAULT_CAMPAIGN_ID}?step=1`} replace />} />
+              <Route path="/pair" element={<CustomerDiscovery />} />
               <Route path="/pair/:campaignId" element={<CustomerPairingRoute />} />
               <Route element={<AppShell />}>
                 <Route index element={<Navigate to="/dashboard" replace />} />
@@ -83,6 +85,7 @@ export function App() {
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
+            </LangRoot>
           </BrowserRouter>
         </GemHunterProvider>
       </AppProvider>

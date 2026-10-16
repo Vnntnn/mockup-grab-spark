@@ -1,3 +1,4 @@
+import { Store } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -20,19 +21,17 @@ export function StoreModal({ isOpen, onClose, merchantName }: StoreModalProps) {
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent>
         <DialogHeader>
+          <span className="mb-1 grid size-12 place-items-center rounded-full bg-accent text-ink">
+            <Store className="size-6" aria-hidden="true" />
+          </span>
           <DialogTitle>{storeTitle}</DialogTitle>
           <DialogDescription>
-            ระบบนี้เป็นต้นแบบจำลอง (Prototype Demonstration) เพื่อแสดงแนวคิดการจับคู่เมนูข้ามร้าน ไม่ได้เชื่อมต่อกับระบบสั่งอาหารจริง และไม่มีการตัดเงินหรือส่งอาหารจริง
+            นี่เป็นต้นแบบจำลอง (Prototype) จึงยังไม่มีลิงก์สั่งอาหารของร้านนี้ ไม่มีการสั่งซื้อ ไม่ชำระเงิน และไม่ส่งอาหารจริง
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button
-            type="button"
-            variant="default"
-            onClick={onClose}
-            className="min-h-[48px] px-6"
-          >
-            ปิด
+          <Button type="button" variant="default" onClick={onClose} className="min-h-[48px] px-6 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
+            กลับไปดูคู่เมนู
           </Button>
         </DialogFooter>
       </DialogContent>

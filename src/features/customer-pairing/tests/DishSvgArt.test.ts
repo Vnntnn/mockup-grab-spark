@@ -19,6 +19,11 @@ describe('DishSvgArt component', () => {
     expect(html).toContain('ภาพจำลอง')
   })
 
+  it('draws what the name promises: "หมูสะเต๊ะ 10 ไม้" shows exactly ten sticks', () => {
+    const html = renderToString(React.createElement(DishSvgArt, { slug: 'moo-satay-10' }))
+    expect(html.match(/fill="#d8b07a"/g)?.length).toBe(10)
+  })
+
   it('hides SVG from screen readers when paired with visible text', () => {
     const html = renderToString(React.createElement(DishSvgArt, { slug: 'moo-satay-10' }))
     expect(html).toMatch(/<svg[^>]*aria-hidden="true"/)
@@ -47,14 +52,11 @@ describe('DishSvgArt component', () => {
     expect(html).toContain('ภาพจำลอง')
   })
 
-  it('applies size classes for sm, md, lg variants', () => {
-    const smHtml = renderToString(React.createElement(DishSvgArt, { slug: 'khao-man-gai-tom', size: 'sm' }))
-    const mdHtml = renderToString(React.createElement(DishSvgArt, { slug: 'khao-man-gai-tom', size: 'md' }))
-    const lgHtml = renderToString(React.createElement(DishSvgArt, { slug: 'khao-man-gai-tom', size: 'lg' }))
-
-    expect(smHtml).toContain('w-24')
-    expect(mdHtml).toContain('max-w-sm')
-    expect(lgHtml).toContain('max-w-md')
+  it('renders a bare plate with the simulation caption as a figcaption, kept in the accessibility tree', () => {
+    const html = renderToString(React.createElement(DishSvgArt, { slug: 'khao-man-gai-tom' }))
+    expect(html).toMatch(/<figure[^>]*>.*<figcaption[^>]*>ภาพจำลอง<\/figcaption>/)
+    expect(html).not.toMatch(/<figcaption[^>]*aria-hidden/)
+    expect(html).not.toContain('bg-[#ede5d8]') // no tile behind the plate
   })
 
   it('merges custom className on wrapper', () => {

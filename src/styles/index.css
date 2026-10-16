@@ -298,6 +298,8 @@
   }
 }
 
+html.lang-switching *, html.lang-switching *::before, html.lang-switching *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; }
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -310,3 +312,83 @@
     opacity: 0.4;
   }
 }
+
+/* bottom padding that clears the iOS home indicator but never drops below 1rem (used by the pairing selection dock) */
+@utility pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/*
+ * Customer pairing (/pair). Type scale and motion, kept in one place.
+ * Thai needs line-height of at least 1.3 on headings (stacked vowels and tone marks), 1.5 on body.
+ * Scale: display, title, name (a dish or restaurant), body, caption. Nothing else.
+ */
+@layer components {
+  .pr-display { font-size: 1.75rem; line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+  .pr-title { font-size: 1.375rem; line-height: 1.35; font-weight: 700; }
+  .pr-name { font-size: 1.25rem; line-height: 1.4; font-weight: 700; }
+  .pr-body { font-size: 1rem; line-height: 1.6; }
+  .pr-caption { font-size: 0.875rem; line-height: 1.5; }
+  .pr-price { font-weight: 600; font-variant-numeric: tabular-nums; }
+  @media (min-width: 1024px) { .pr-display { font-size: 2.25rem; } .pr-title { font-size: 1.625rem; } }
+
+  /* Motion. Each class answers one question: what arrived, what changed, where did this come from. */
+  /* arrival of the first screen: three items, staggered by --i, once */
+  .pr-rise { animation: pr-rise 360ms var(--ease-out) calc(var(--i, 0) * 70ms) backwards; }
+  /* a marker or plate appears; map markers stagger so the network assembles */
+  .pr-pop { animation: pr-pop 280ms var(--ease-out) calc(var(--i, 0) * 70ms) backwards; }
+  /* a connection is drawn (pathLength is 1 on the line) */
+  .pr-draw { animation: pr-draw 420ms var(--ease-out) calc(var(--i, 0) * 70ms) backwards; }
+  /* new content replacing old in the same place (detail swap, a chosen dish name) */
+  .pr-swap { animation: pr-swap var(--dur-standard) var(--ease-out) backwards; }
+  /* details come from the map: a sheet from the bottom edge on phones, a settle on desktop */
+  .pr-panel-in { animation: pr-swap 260ms var(--ease-out) backwards; }
+  @media (max-width: 1023px) { .pr-panel-in { animation-name: pr-sheet; } }
+  /* a dish joins the pair picture (the desktop summary) */
+  .pr-join-a { animation: pr-join-a var(--dur-standard) var(--ease-out) backwards; }
+  .pr-join-b { animation: pr-join-b var(--dur-standard) var(--ease-out) backwards; }
+  /* two gems slide together once: a bond forming (logo on arrival, a pairing picked, the result) */
+  .gem-snap-a { animation: gem-snap-a 340ms var(--ease-out) 120ms backwards; }
+  .gem-snap-b { animation: gem-snap-b 340ms var(--ease-out) 120ms backwards; }
+  /* GemBond bond (merchant side): only when a consent really turns valid while the bond is on screen. A short delay lets the
+     demo drawer finish closing, so the change is seen. */
+  .bond-fill-left { transform-origin: left; animation: bond-fill 420ms var(--ease-out) 380ms backwards; }
+  .bond-fill-right { transform-origin: right; animation: bond-fill 420ms var(--ease-out) 380ms backwards; }
+  .bond-gem-pop { animation: bond-gem-pop 460ms var(--ease-out) 380ms backwards; }
+  .bond-joint { animation: bond-joint 420ms var(--ease-out) 640ms backwards; }
+  .bond-ring { animation: pr-ping 650ms var(--ease-out) 640ms both; }
+  /* one soft ring on the marker that has just been chosen on the map */
+  .pr-ping { animation: pr-ping 650ms var(--ease-out) both; }
+  /* every tappable row, tab and text action gives the same small press (buttons from the Button component already do) */
+  .pr-press { transition: transform 90ms var(--ease-out); }
+  .pr-press:active { transform: translateY(2px) scale(0.985); }
+  @media (prefers-reduced-motion: reduce) { .pr-press:active { transform: none; } }
+  /* chosen menu rows and the progress underline ease between states */
+  .pr-row { transition: background-color var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out); }
+  .pr-slide { transition: translate var(--dur-standard) var(--ease-out), transform var(--dur-standard) var(--ease-out); }
+}
+@keyframes pr-rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes pr-pop { from { opacity: 0; transform: scale(0.85); } }
+@keyframes pr-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes pr-swap { from { opacity: 0; transform: translateY(6px); } }
+@keyframes pr-sheet { from { opacity: 0; transform: translateY(28px); } }
+@keyframes gem-snap-a { from { transform: translateX(-7px); } }
+@keyframes gem-snap-b { from { transform: translateX(7px); } }
+@keyframes bond-fill { from { transform: scaleX(0); } }
+@keyframes bond-gem-pop { 50% { transform: scale(1.1); } }
+@keyframes bond-joint { from { transform: scale(0.6); } 60% { transform: scale(1.15); } }
+@keyframes pr-ping { from { opacity: 0.5; transform: scale(0.8); } to { opacity: 0; transform: scale(1.7); } }
+@keyframes pr-join-a { from { opacity: 0; transform: translateX(-14px); } }
+@keyframes pr-join-b { from { opacity: 0; transform: translateX(14px); } }
+
+/* Selective page transitions (leaving /pair for dish steps, and step 3 to step 4 result) */
+::view-transition-old(root) { animation: vt-out 140ms var(--ease-out) both; }
+::view-transition-new(root) { animation: vt-in 200ms var(--ease-out) both; }
+@keyframes vt-out { to { opacity: 0; transform: translateY(-4px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* bottom padding that clears the iOS home indicator but never drops below 1rem (used by the pairing selection dock) */
+@utility pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+

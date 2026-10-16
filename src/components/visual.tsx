@@ -91,8 +91,49 @@ export function Meter({ value, label, className }: { value: number; label: strin
   )
 }
 
-/** Two shapes in a line: used where a screen has nothing to show yet. */
-export function EmptyArt({ className }: { className?: string }) {
+/** Custom gem and plate illustrations for empty states where a screen has nothing to show yet. */
+export function EmptyArt({
+  className,
+  kind = 'bond',
+}: {
+  className?: string
+  kind?: 'bond' | 'plans' | 'campaigns' | 'results'
+}) {
+  if (kind === 'results')
+    return (
+      <svg viewBox="0 0 120 56" className={cn('h-14 w-[7.5rem]', className)} fill="none" aria-hidden="true" focusable="false">
+        <polygon points="24,6 40,15 40,33 24,42 8,33 8,15" stroke="#161616" strokeWidth="2.5" strokeLinejoin="round" />
+        {/* three empty bars: what the results will fill, nothing invented */}
+        <rect x="64" y="30" width="10" height="16" rx="2" stroke="#c9d0c9" strokeWidth="2.5" strokeDasharray="3 4" />
+        <rect x="82" y="20" width="10" height="26" rx="2" stroke="#c9d0c9" strokeWidth="2.5" strokeDasharray="3 4" />
+        <rect x="100" y="10" width="10" height="36" rx="2" stroke="#00b14f" strokeWidth="2.5" strokeDasharray="3 4" />
+        <path d="M60 50h54" stroke="#161616" strokeWidth="2.5" strokeLinecap="round" />
+      </svg>
+    )
+  if (kind === 'plans')
+    return (
+      <svg viewBox="0 0 120 56" className={cn('h-14 w-[7.5rem]', className)} fill="none" aria-hidden="true" focusable="false">
+        {/* merchant gem linked to a shared plan sheet & plate */}
+        <polygon points="22,10 36,18 36,34 22,42 8,34 8,18" stroke="#161616" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="M40 26h20" stroke="#c9d0c9" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="2 5" />
+        <rect x="64" y="6" width="46" height="44" rx="5" stroke="#161616" strokeWidth="2.5" />
+        <circle cx="79" cy="24" r="8" stroke="#00b14f" strokeWidth="2.2" />
+        <circle cx="95" cy="24" r="8" stroke="#c9d0c9" strokeWidth="2.2" strokeDasharray="2 3" />
+        <path d="M72 40h30" stroke="#161616" strokeWidth="2.2" strokeLinecap="round" />
+      </svg>
+    )
+  if (kind === 'campaigns')
+    return (
+      <svg viewBox="0 0 120 56" className={cn('h-14 w-[7.5rem]', className)} fill="none" aria-hidden="true" focusable="false">
+        {/* two paired plates with the GemBond gem mark between them */}
+        <circle cx="30" cy="28" r="19" stroke="#161616" strokeWidth="2.5" />
+        <circle cx="30" cy="28" r="12" stroke="#c9d0c9" strokeWidth="2" strokeDasharray="2 4" />
+        <circle cx="90" cy="28" r="19" stroke="#00b14f" strokeWidth="2.5" />
+        <circle cx="90" cy="28" r="12" stroke="#c9d0c9" strokeWidth="2" strokeDasharray="2 4" />
+        <polygon points="60,16 70,22 70,34 60,40 50,34 50,22" fill="#ffffff" stroke="#161616" strokeWidth="2.5" strokeLinejoin="round" />
+        <circle cx="60" cy="28" r="3" fill="#00b14f" />
+      </svg>
+    )
   return (
     <svg viewBox="0 0 120 56" className={cn('h-14 w-[7.5rem]', className)} fill="none" aria-hidden="true" focusable="false">
       <polygon points="24,6 40,15 40,33 24,42 8,33 8,15" stroke="#161616" strokeWidth="2.5" strokeLinejoin="round" />

@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { useKept } from '@/i18n/keep'
 import { AlertTriangle, ArrowLeft, Ban, CalendarDays, Check, Eye, EyeOff, Split, Tag, Wallet } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { BondPair } from '@/components/BondPair'
 import { DocSection } from '@/components/DocSection'
 import { Gem, GemMark } from '@/components/GemMark'
@@ -47,7 +48,7 @@ export function PlanDetail() {
   const navigate = useNavigate()
   const [consentOpen, setConsentOpen] = useState(false)
   // the terms version on screen when the dialog opened; consent is refused if the terms changed before confirming
-  const [reviewedVersion, setReviewedVersion] = useState<number | null>(null)
+  const [reviewedVersion, setReviewedVersion] = useKept<number | null>('plan:reviewed', null)
   const plan = planId ? state.plans[planId] : undefined
 
   if (!plan) {

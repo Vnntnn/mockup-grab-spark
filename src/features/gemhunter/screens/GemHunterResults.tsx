@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { useKept } from '@/i18n/keep'
 import { ArrowRight, BadgeCheck, Check, CircleDashed, ExternalLink, FlaskConical, Lock, PackageCheck, ShieldCheck, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -154,7 +155,7 @@ export function GemHunterResults() {
   const { state } = useGemHunter()
   const run = useRun()
   const navigate = useNavigate()
-  const [consent, setConsent] = useState(false)
+  const [consent, setConsent] = useKept('results:consent', false)
   const c = state.campaign
   const ev = evidenceOf(c)
   const m = campaignMetrics(c)

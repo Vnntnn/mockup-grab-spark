@@ -1,6 +1,6 @@
 import { ArrowRight, Clock, MapPin, Utensils } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { Gem } from '@/components/GemMark'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import { Button } from '@/components/ui/button'
@@ -26,14 +26,14 @@ function Choices({ plan, className, lead = true }: { plan: GrowthPlan; className
   const inMotion = plan.lifecycleStatus !== 'awaiting'
   return (
     <div className={className}>
-      <Button asChild variant={lead ? 'default' : 'outline'} className="h-12 px-6 text-[17px] font-bold">
+      <Button asChild variant={lead ? 'default' : 'outline'} className="h-auto min-h-12 max-w-full shrink py-2 whitespace-normal px-6 text-[17px] font-bold">
         <Link to={`/plans/${plan.id}`}>
           {inMotion ? 'ดูแผนนี้' : 'ดูแผนที่แนะนำ'}
           <ArrowRight data-icon="inline-end" />
         </Link>
       </Button>
       {!inMotion && (
-        <Button variant={lead ? 'outline' : 'ghost'} className="h-12 px-6 text-[17px]" onClick={decline}>
+        <Button variant={lead ? 'outline' : 'ghost'} className="h-auto min-h-12 max-w-full shrink py-2 whitespace-normal px-6 text-[17px]" onClick={decline}>
           ไม่สนใจร้านนี้
         </Button>
       )}

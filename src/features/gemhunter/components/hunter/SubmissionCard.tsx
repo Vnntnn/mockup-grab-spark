@@ -177,7 +177,7 @@ export function SubmissionCard({ s, open, className }: { s: HunterSubmission; op
               <div className="gh-ok mt-1 flex flex-col gap-2 rounded-xl bg-secondary p-3">
                 <p className="text-[15px]">รูปนี้อยู่หน้าร้านอยู่ ถ้าไม่ใช้ จะเอาออกจากหน้าร้านด้วย (ไม่กระทบรีวิวและการขายตามปกติ)</p>
                 <div className="flex flex-wrap gap-2">
-                  <Button className="h-11 px-4 text-[17px]" onClick={() => decide('rejected')}>
+                  <Button variant="destructive" className="h-11 px-4 text-[17px]" onClick={() => decide('rejected')}>
                     ยืนยันไม่ใช้รูปนี้
                   </Button>
                   <Button variant="outline" className="h-11 px-4 text-[17px]" onClick={() => setConfirmRemove(false)}>

@@ -4,6 +4,8 @@ import React from 'react'
 import { Screen1Discover } from '../screens/Screen1Discover'
 import { Screen2SelectMain } from '../screens/Screen2SelectMain'
 import { Screen3SelectComplement } from '../screens/Screen3SelectComplement'
+import { DishMenu } from '../components/DishMenu'
+import { PairProgress } from '../components/PairProgress'
 import { createInitialState } from '@/app/reducer'
 import { resolvePairingCampaign, DEFAULT_CAMPAIGN_ID } from '../data'
 
@@ -14,16 +16,8 @@ type RadioCardElement = React.ReactElement<{
   ref?: (el: HTMLElement | null) => void
 }
 
-interface RenderedScreen2Tree {
-  props: {
-    children: [unknown, { props: { children: RadioCardElement[] } }]
-  }
-}
-
-interface RenderedScreen3Tree {
-  props: {
-    children: [unknown, unknown, { props: { children: RadioCardElement[] } }]
-  }
+interface RenderedGroupTree {
+  props: { children: RadioCardElement[] }
 }
 
 describe('Screens 1, 2, 3', () => {
@@ -46,7 +40,7 @@ describe('Screens 1, 2, 3', () => {
       expect(html).toContain('min-h-[48px]')
     })
 
-    it('renders restaurant chips with initial gems and categories', () => {
+    it('renders both restaurants as plain facts with their sections', () => {
       const html = renderToString(
         React.createElement(Screen1Discover, {
           data: campData,
@@ -58,9 +52,11 @@ describe('Screens 1, 2, 3', () => {
       expect(html).toContain('อาหารจานหลัก')
       expect(html).toContain('ร้านหมูสะเต๊ะบ้านสวน')
       expect(html).toContain('ของว่างทานเล่น')
-      // Gem glyphs: 'ข' and 'ส'
-      expect(html).toContain('>ข<')
-      expect(html).toContain('>ส<')
+      // each restaurant is plain facts: name, section, area and hours labelled as demo data
+      expect(html).toContain('ย่านออฟฟิศกลางกรุง')
+      expect(html).toMatch(/เปิด (<!-- -->)?11:00/)
+      expect(html).toContain('ข้อมูลตัวอย่าง')
+      expect(html).not.toContain('bg-stall-a')
     })
 
     it('renders primary CTA button with Grab Green styling, 52px height, and bold 17px Sarabun', () => {
@@ -71,11 +67,10 @@ describe('Screens 1, 2, 3', () => {
           onLoadSample: () => {},
         })
       )
-      expect(html).toContain('bg-[#00B14F]')
-      expect(html).toContain('text-[#0A0A0A]')
-      expect(html).toContain('h-[52px]')
-      expect(html).toContain('text-[17px]')
-      expect(html).toContain('font-bold')
+      expect(html).toContain('bg-brand')
+      expect(html).toContain('text-primary-foreground')
+      expect(html).toContain('min-h-[52px]')
+            expect(html).toContain('font-bold')
     })
 
     it('renders secondary sample shelf with exact dish names and prices', () => {
@@ -120,7 +115,7 @@ describe('Screens 1, 2, 3', () => {
       expect(html).toContain('฿70')
     })
 
-    it('renders subheader indicating step 1 of 2 and Restaurant A name', () => {
+    it('renders the heading with the role and Restaurant A name', () => {
       const html = renderToString(
         React.createElement(Screen2SelectMain, {
           data: campData,
@@ -128,11 +123,12 @@ describe('Screens 1, 2, 3', () => {
           onSelect: () => {},
         })
       )
-      expect(html).toContain('ขั้นตอนที่ 1 จาก 2: เลือกจานหลักจาก ร้านข้าวหอม')
+      expect(html).toContain('เลือกจานหลักจาก')
+      expect(html).not.toContain('ขั้นตอนที่') // the pair progress says where we are; no counter above the heading
       expect(html).toContain('aria-label="เลือกจานหลักจากร้านข้าวหอม"')
     })
 
-    it('renders all 3 dishes from menuA with min-h-[56px] touch targets', () => {
+    it('renders all 3 dishes from menuA with comfortable (72px) rows', () => {
       const html = renderToString(
         React.createElement(Screen2SelectMain, {
           data: campData,
@@ -146,10 +142,10 @@ describe('Screens 1, 2, 3', () => {
       expect(html).toContain('฿70')
       expect(html).toContain('ข้าวหน้าไก่เทอริยากิ')
       expect(html).toContain('฿85')
-      expect(html).toContain('min-h-[56px]')
+      expect(html).toContain('min-h-[72px]')
     })
 
-    it('applies selected styling with 2px ink border and light green background to selected card', () => {
+    it('marks the chosen dish with the green wash, an ink bar and aria-checked', () => {
       const html = renderToString(
         React.createElement(Screen2SelectMain, {
           data: campData,
@@ -157,8 +153,7 @@ describe('Screens 1, 2, 3', () => {
           onSelect: () => {},
         })
       )
-      expect(html).toContain('border-[#161616]')
-      expect(html).toContain('bg-[#E3F6EA]')
+      expect(html).toContain('bg-accent')
       expect(html).toContain('aria-checked="true"')
     })
 
@@ -194,18 +189,19 @@ describe('Screens 1, 2, 3', () => {
 
     it('advances selection and focuses next card on ArrowDown and ArrowRight, with wrapping', () => {
       const onSelect = vi.fn()
-      const capture = { current: null as RenderedScreen2Tree | null }
+      const capture = { current: null as RenderedGroupTree | null }
       function Wrapper() {
-        const el = Screen2SelectMain({
-          data: campData,
+        const el = DishMenu({
+          label: 'เลือกจานหลัก',
+          options: campData.menuA,
           selectedSlug: null,
           onSelect,
         })
-        capture.current = el as unknown as RenderedScreen2Tree
+        capture.current = el as unknown as RenderedGroupTree
         return el
       }
       renderToString(React.createElement(Wrapper))
-      const radioGroup = capture.current!.props.children[1]
+      const radioGroup = capture.current!
       const cards = radioGroup.props.children
       const mockDoms = cards.map(() => ({ focus: vi.fn() }))
       cards.forEach((card, i) => {
@@ -237,18 +233,19 @@ describe('Screens 1, 2, 3', () => {
 
     it('reverses selection and focuses previous card on ArrowUp and ArrowLeft, with wrapping', () => {
       const onSelect = vi.fn()
-      const capture = { current: null as RenderedScreen2Tree | null }
+      const capture = { current: null as RenderedGroupTree | null }
       function Wrapper() {
-        const el = Screen2SelectMain({
-          data: campData,
+        const el = DishMenu({
+          label: 'เลือกจานหลัก',
+          options: campData.menuA,
           selectedSlug: 'khao-man-gai-tod',
           onSelect,
         })
-        capture.current = el as unknown as RenderedScreen2Tree
+        capture.current = el as unknown as RenderedGroupTree
         return el
       }
       renderToString(React.createElement(Wrapper))
-      const radioGroup = capture.current!.props.children[1]
+      const radioGroup = capture.current!
       const cards = radioGroup.props.children
       const mockDoms = cards.map(() => ({ focus: vi.fn() }))
       cards.forEach((card, i) => {
@@ -273,18 +270,19 @@ describe('Screens 1, 2, 3', () => {
 
     it('selects first and last options on Home and End keys', () => {
       const onSelect = vi.fn()
-      const capture = { current: null as RenderedScreen2Tree | null }
+      const capture = { current: null as RenderedGroupTree | null }
       function Wrapper() {
-        const el = Screen2SelectMain({
-          data: campData,
+        const el = DishMenu({
+          label: 'เลือกจานหลัก',
+          options: campData.menuA,
           selectedSlug: 'khao-man-gai-tod',
           onSelect,
         })
-        capture.current = el as unknown as RenderedScreen2Tree
+        capture.current = el as unknown as RenderedGroupTree
         return el
       }
       renderToString(React.createElement(Wrapper))
-      const radioGroup = capture.current!.props.children[1]
+      const radioGroup = capture.current!
       const cards = radioGroup.props.children
       const mockDoms = cards.map(() => ({ focus: vi.fn() }))
       cards.forEach((card, i) => {
@@ -309,18 +307,19 @@ describe('Screens 1, 2, 3', () => {
 
     it('selects current option on Space and Enter keys without moving index', () => {
       const onSelect = vi.fn()
-      const capture = { current: null as RenderedScreen2Tree | null }
+      const capture = { current: null as RenderedGroupTree | null }
       function Wrapper() {
-        const el = Screen2SelectMain({
-          data: campData,
+        const el = DishMenu({
+          label: 'เลือกจานหลัก',
+          options: campData.menuA,
           selectedSlug: null,
           onSelect,
         })
-        capture.current = el as unknown as RenderedScreen2Tree
+        capture.current = el as unknown as RenderedGroupTree
         return el
       }
       renderToString(React.createElement(Wrapper))
-      const radioGroup = capture.current!.props.children[1]
+      const radioGroup = capture.current!
       const cards = radioGroup.props.children
 
       const preventDefaultSpace = vi.fn()
@@ -347,46 +346,41 @@ describe('Screens 1, 2, 3', () => {
   })
 
   describe('Screen3SelectComplement', () => {
-    it('renders preserved Dish A chip with [เปลี่ยน] on Screen 3', () => {
-      const html = renderToString(
-        React.createElement(Screen3SelectComplement, {
-          data: campData,
-          selectedDishA: campData.menuA[1],
-          selectedSlugB: null,
-          onSelectB: () => {},
-          onEditA: () => {},
-        })
+    it('keeps the first choice and its change action in the pinned pair progress (not on this screen)', () => {
+      const onEditA = vi.fn()
+      const progress = renderToString(
+        React.createElement(PairProgress, { data: campData, dishA: campData.menuA[1], dishB: null, active: 'B', onEditA }),
       )
-      expect(html).toContain('ข้าวมันไก่ทอด')
-      expect(html).toContain('เปลี่ยน')
-      expect(html).toContain('หมูสะเต๊ะ 10 ไม้')
-      expect(html).toContain('฿120')
-      expect(html).toContain('min-h-[48px]')
-      expect(html).toContain('aria-label="เปลี่ยนจานหลัก"')
+      expect(progress).toContain('ข้าวมันไก่ทอด')
+      expect(progress).toContain('ยังไม่ได้เลือก')
+      expect(progress).toContain('aria-label="เปลี่ยนจานหลัก"')
+      expect(progress).toContain('min-h-[48px]')
+      // while choosing from the first restaurant there is nothing to change yet
+      const first = renderToString(
+        React.createElement(PairProgress, { data: campData, dishA: null, dishB: null, active: 'A', onEditA }),
+      )
+      expect(first).not.toContain('เปลี่ยน')
     })
 
-    it('renders subheader indicating step 2 of 2 and Restaurant B name', () => {
+    it('renders the heading with the role and Restaurant B name', () => {
       const html = renderToString(
         React.createElement(Screen3SelectComplement, {
           data: campData,
-          selectedDishA: campData.menuA[0],
           selectedSlugB: null,
           onSelectB: () => {},
-          onEditA: () => {},
         })
       )
-      expect(html).toContain('ขั้นตอนที่ 2 จาก 2: เลือกของว่างจาก ร้านหมูสะเต๊ะบ้านสวน')
+      expect(html).toContain('เลือกของว่างจาก')
+      expect(html).not.toContain('ขั้นตอนที่')
       expect(html).toContain('aria-label="เลือกของว่างจากร้านหมูสะเต๊ะบ้านสวน"')
     })
 
-    it('renders all 3 dishes from menuB with pb-36 padding and min-h-[56px] cards', () => {
+    it('renders all 3 dishes from menuB with dock clearance and 72px rows', () => {
       const html = renderToString(
         React.createElement(Screen3SelectComplement, {
           data: campData,
-          selectedDishA: campData.menuA[0],
           selectedSlugB: null,
           onSelectB: () => {},
-          onEditA: () => {},
         })
       )
       expect(html).toContain('pb-36')
@@ -396,21 +390,18 @@ describe('Screens 1, 2, 3', () => {
       expect(html).toContain('฿95')
       expect(html).toContain('ปีกไก่ทอดน้ำปลา')
       expect(html).toContain('฿85')
-      expect(html).toContain('min-h-[56px]')
+      expect(html).toContain('min-h-[72px]')
     })
 
-    it('applies selected styling with 2px ink border and light green background to selected complement dish', () => {
+    it('marks the chosen complement dish with the green wash, an ink bar and aria-checked', () => {
       const html = renderToString(
         React.createElement(Screen3SelectComplement, {
           data: campData,
-          selectedDishA: campData.menuA[0],
           selectedSlugB: 'moo-satay-10',
           onSelectB: () => {},
-          onEditA: () => {},
         })
       )
-      expect(html).toContain('border-[#161616]')
-      expect(html).toContain('bg-[#E3F6EA]')
+      expect(html).toContain('bg-accent')
       expect(html).toContain('aria-checked="true"')
     })
 
@@ -418,37 +409,19 @@ describe('Screens 1, 2, 3', () => {
       const html = renderToString(
         React.createElement(Screen3SelectComplement, {
           data: campData,
-          selectedDishA: campData.menuA[0],
           selectedSlugB: 'moo-satay-10',
           onSelectB: () => {},
-          onEditA: () => {},
         })
       )
       expect(html).not.toMatch(/[\u{1F300}-\u{1F9FF}]/u)
-    })
-
-    it('does not render Dish A anchor chip if selectedDishA is null', () => {
-      const html = renderToString(
-        React.createElement(Screen3SelectComplement, {
-          data: campData,
-          selectedDishA: null,
-          selectedSlugB: null,
-          onSelectB: () => {},
-          onEditA: () => {},
-        })
-      )
-      expect(html).not.toContain('aria-label="เปลี่ยนจานหลัก"')
-      expect(html).not.toContain('เปลี่ยน')
     })
 
     it('marks unselected cards with aria-checked="false" and tabIndex="-1"', () => {
       const html = renderToString(
         React.createElement(Screen3SelectComplement, {
           data: campData,
-          selectedDishA: campData.menuA[0],
           selectedSlugB: 'moo-satay-10',
           onSelectB: () => {},
-          onEditA: () => {},
         })
       )
       expect(html).toContain('aria-checked="false"')
@@ -459,10 +432,8 @@ describe('Screens 1, 2, 3', () => {
       const html = renderToString(
         React.createElement(Screen3SelectComplement, {
           data: campData,
-          selectedDishA: campData.menuA[0],
           selectedSlugB: null,
           onSelectB: () => {},
-          onEditA: () => {},
         })
       )
       const radioTags = [...html.matchAll(/<div[^>]*role="radio"[^>]*>/g)].map((m) => m[0])
@@ -476,10 +447,8 @@ describe('Screens 1, 2, 3', () => {
       const html = renderToString(
         React.createElement(Screen3SelectComplement, {
           data: campData,
-          selectedDishA: campData.menuA[0],
           selectedSlugB: 'gai-yang',
           onSelectB: () => {},
-          onEditA: () => {},
         })
       )
       const radioTags = [...html.matchAll(/<div[^>]*role="radio"[^>]*>/g)].map((m) => m[0])
@@ -491,20 +460,19 @@ describe('Screens 1, 2, 3', () => {
 
     it('advances selection and focuses next complement card on ArrowDown / ArrowRight, with wrapping', () => {
       const onSelectB = vi.fn()
-      const capture = { current: null as RenderedScreen3Tree | null }
+      const capture = { current: null as RenderedGroupTree | null }
       function Wrapper() {
-        const el = Screen3SelectComplement({
-          data: campData,
-          selectedDishA: campData.menuA[0],
-          selectedSlugB: null,
-          onSelectB,
-          onEditA: () => {},
+        const el = DishMenu({
+          label: 'เลือกของว่าง',
+          options: campData.menuB,
+          selectedSlug: null,
+          onSelect: onSelectB,
         })
-        capture.current = el as unknown as RenderedScreen3Tree
+        capture.current = el as unknown as RenderedGroupTree
         return el
       }
       renderToString(React.createElement(Wrapper))
-      const radioGroup = capture.current!.props.children[2]
+      const radioGroup = capture.current!
       const cards = radioGroup.props.children
       const mockDoms = cards.map(() => ({ focus: vi.fn() }))
       cards.forEach((card, i) => {
@@ -536,20 +504,19 @@ describe('Screens 1, 2, 3', () => {
 
     it('reverses selection and jumps with Home/End on Screen 3', () => {
       const onSelectB = vi.fn()
-      const capture = { current: null as RenderedScreen3Tree | null }
+      const capture = { current: null as RenderedGroupTree | null }
       function Wrapper() {
-        const el = Screen3SelectComplement({
-          data: campData,
-          selectedDishA: campData.menuA[0],
-          selectedSlugB: 'gai-yang',
-          onSelectB,
-          onEditA: () => {},
+        const el = DishMenu({
+          label: 'เลือกของว่าง',
+          options: campData.menuB,
+          selectedSlug: 'gai-yang',
+          onSelect: onSelectB,
         })
-        capture.current = el as unknown as RenderedScreen3Tree
+        capture.current = el as unknown as RenderedGroupTree
         return el
       }
       renderToString(React.createElement(Wrapper))
-      const radioGroup = capture.current!.props.children[2]
+      const radioGroup = capture.current!
       const cards = radioGroup.props.children
       const mockDoms = cards.map(() => ({ focus: vi.fn() }))
       cards.forEach((card, i) => {

@@ -32,14 +32,14 @@ export function StickyDecisionDock({ plan, isSelfAccepted, fairnessPassed, total
   const primary = (full: boolean) => {
     if (dock.requiresConsent)
       return (
-        <Button type="button" onClick={onOpenConsent} className={cn(full && 'w-full')}>
+        <Button type="button" onClick={onOpenConsent} className={cn(full && 'w-full', 'order-first min-[480px]:order-none')}>
           {dock.primaryActionLabel}
         </Button>
       )
     if (!dock.primaryActionLabel) return null
     const to = st === 'completed' ? '/results' : '/campaigns'
     return (
-      <Button asChild className={cn(full && 'w-full')}>
+      <Button asChild className={cn(full && 'w-full', 'order-first min-[480px]:order-none')}>
         <Link to={to}>
           {dock.primaryActionLabel}
           <ArrowRight data-icon="inline-end" />
@@ -103,7 +103,7 @@ export function StickyDecisionDock({ plan, isSelfAccepted, fairnessPassed, total
             <span className="flex items-center gap-2"><Wallet className="size-5 text-link" aria-hidden="true" />ร้านคุณจ่ายเพิ่ม <strong className="figure text-[18px]">{cost}</strong></span>
             {waitingForPartner && <span className="flex items-center gap-1 font-semibold text-link"><Check className="size-4" strokeWidth={3} aria-hidden="true" />ยืนยันแล้ว</span>}
           </p>
-          <div className={cn('grid gap-2 [&_[data-slot=button]]:px-3 [&_[data-slot=button]]:leading-tight [&_[data-slot=button]]:whitespace-normal', dock.canDecline && dock.primaryActionLabel ? 'grid-cols-2' : 'grid-cols-1')}>
+          <div className={cn('grid gap-2 [&_[data-slot=button]]:h-auto [&_[data-slot=button]]:min-h-12 [&_[data-slot=button]]:px-3 [&_[data-slot=button]]:py-2 [&_[data-slot=button]]:text-center [&_[data-slot=button]]:leading-tight [&_[data-slot=button]]:whitespace-normal', dock.canDecline && dock.primaryActionLabel ? 'grid-cols-1 min-[480px]:grid-cols-2' : 'grid-cols-1')}>
             {decline(true)}
             {primary(true)}
             {reopen(true)}

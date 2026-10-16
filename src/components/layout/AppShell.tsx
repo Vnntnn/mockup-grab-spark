@@ -1,4 +1,6 @@
 import { BarChart3, ClipboardList, Compass, LayoutDashboard, Megaphone, Store, type LucideIcon } from 'lucide-react'
+import { SiteFooter } from '@/components/SiteFooter'
+import { LangToggle } from '@/i18n/LangToggle'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { Toaster } from '@/components/ui/sonner'
@@ -59,7 +61,7 @@ export function AppShell() {
       <header className="sticky top-0 z-20 border-b border-border bg-card shadow-[var(--shadow-edge)]">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 md:px-6">
           <Link to="/dashboard" className="flex min-h-12 items-center gap-2" aria-label="GemBond หน้าภาพรวม">
-            <GemMark className="size-8" />
+            <GemMark className="size-8" snap />
             <span className="text-[22px] font-bold text-ink">GemBond</span>
           </Link>
           <nav aria-label="เมนูหลัก" className="-mr-3 hidden items-stretch lg:flex">
@@ -70,14 +72,17 @@ export function AppShell() {
               </NavLink>
             ))}
           </nav>
-          <Link to={STORE.to} className="flex min-h-12 items-center gap-2 text-[15px] font-medium lg:hidden" aria-label={`${me.name} ไปหน้าร้านของฉัน`}>
+          <div className="flex items-center gap-2 sm:gap-3">
+          <LangToggle />
+          <Link to={STORE.to} className="flex min-h-12 min-w-11 items-center justify-center gap-2 text-[15px] font-medium lg:hidden" aria-label={`${me.name} ไปหน้าร้านของฉัน`}>
             <Gem glyph={initial(me.name)} tone="self" className="size-8" />
-            ร้านของฉัน
+            <span className="hidden sm:inline">ร้านของฉัน</span>
           </Link>
+          </div>
         </div>
       </header>
 
-      <main id="main" tabIndex={-1} className={cn("mx-auto max-w-5xl px-4 pt-6 pb-36 outline-none md:px-6 md:pt-10 lg:pb-24", isDecision && "pb-32")}>
+      <main id="main" tabIndex={-1} className={cn("mx-auto max-w-5xl px-4 pt-6 pb-36 outline-none md:px-6 md:pt-10 lg:pb-24", isDecision && "pb-48 min-[480px]:pb-36")}>
         <div key={pathname} className="rise">
           <Outlet />
         </div>
@@ -87,6 +92,7 @@ export function AppShell() {
             ขอความช่วยเหลือ
           </Link>
         </p>
+        <SiteFooter className="mt-6" />
       </main>
 
       {!isDecision && (
@@ -114,7 +120,7 @@ export function AppShell() {
         </nav>
       )}
 
-      <Toaster position="bottom-center" offset="96px" mobileOffset="140px" />
+      <Toaster position="bottom-center" offset={{ bottom: '96px', left: '16px', right: '16px' }} mobileOffset={{ bottom: '140px', left: '16px', right: '16px' }} />
     </div>
   )
 }

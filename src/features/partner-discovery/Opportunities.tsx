@@ -1,6 +1,6 @@
 import { ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyArt } from '@/components/visual'
 import { Button } from '@/components/ui/button'

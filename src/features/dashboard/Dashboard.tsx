@@ -1,4 +1,4 @@
-import { ArrowRight, Banknote, Image as ImageIcon, ShieldCheck, ShoppingBag, Star } from 'lucide-react'
+import { ArrowRight, Banknote, CheckCircle2, CircleDot, Clock, Image as ImageIcon, Minus, ShieldCheck, ShoppingBag, Star } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BondPair } from '@/components/BondPair'
 import { PageHeader } from '@/components/PageHeader'
@@ -11,6 +11,16 @@ import { deriveActivity, recentPeriod, selfOf } from '@/app/selectors'
 import { getHeroPartnershipSummary } from './dashboard-helpers'
 import { baht, num } from '@/lib/format'
 import { fmtDay, fmtRange } from '@/lib/dates'
+import { cn } from '@/lib/utils'
+
+/** One small icon per kind of event, so the list can be scanned before it is read. The wording still says everything. */
+function ActivityIcon({ tone }: { tone: 'info' | 'good' | 'wait' | 'quiet' }) {
+  const cls = 'mt-1 size-5 shrink-0'
+  if (tone === 'good') return <CheckCircle2 className={cn(cls, 'text-link')} aria-hidden="true" />
+  if (tone === 'wait') return <Clock className={cn(cls, 'text-muted-foreground')} aria-hidden="true" />
+  if (tone === 'info') return <CircleDot className={cn(cls, 'text-ink')} aria-hidden="true" />
+  return <Minus className={cn(cls, 'text-muted-foreground')} aria-hidden="true" />
+}
 
 export function Dashboard() {
   const { state } = useApp()
@@ -86,18 +96,18 @@ export function Dashboard() {
           </p>
         </div>
         <dl className="mt-3 grid grid-cols-2 gap-3">
-          <div className="surface flex items-center gap-3 px-4 py-4">
+          <div className="surface flex items-center gap-3 px-3 py-4 sm:px-4">
             <ShoppingBag className="size-6 shrink-0 text-link" aria-hidden="true" />
-            <div>
+            <div className="min-w-0">
               <dt className="text-[14px] leading-tight text-muted-foreground">ออเดอร์</dt>
-              <dd className="figure text-[28px] leading-tight text-ink">{num(period.orders)}</dd>
+              <dd className="figure text-[24px] leading-tight text-ink sm:text-[28px]">{num(period.orders)}</dd>
             </div>
           </div>
-          <div className="surface flex items-center gap-3 px-4 py-4">
+          <div className="surface flex items-center gap-3 px-3 py-4 sm:px-4">
             <Banknote className="size-6 shrink-0 text-link" aria-hidden="true" />
-            <div>
+            <div className="min-w-0">
               <dt className="text-[14px] leading-tight text-muted-foreground">ยอดขาย (ก่อนหักต้นทุน)</dt>
-              <dd className="figure text-[28px] leading-tight text-ink">{baht(period.revenue)}</dd>
+              <dd className="figure text-[24px] leading-tight text-ink sm:text-[28px]">{baht(period.revenue)}</dd>
             </div>
           </div>
         </dl>
@@ -128,8 +138,11 @@ export function Dashboard() {
           <ul className="mt-2 divide-y divide-border">
             {activity.slice(0, 3).map((a) => (
               <li key={a.id}>
-                <Link to={a.href} className="flex min-h-11 items-baseline justify-between gap-4 py-3 transition-colors duration-[var(--dur-micro)] hover:text-link">
-                  <span>{a.text}</span>
+                <Link to={a.href} className="flex min-h-11 items-start justify-between gap-4 py-3 transition-colors duration-[var(--dur-micro)] hover:text-link">
+                  <span className="flex items-start gap-3">
+                    <ActivityIcon tone={a.tone} />
+                    <span>{a.text}</span>
+                  </span>
                   <span className="shrink-0 text-[14px] text-muted-foreground">{fmtDay(a.at)}</span>
                 </Link>
               </li>

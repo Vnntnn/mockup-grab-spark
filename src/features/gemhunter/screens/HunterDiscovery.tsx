@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useKept } from '@/i18n/keep'
 import { Camera, Clock3, Info, MapPin, ShoppingBag, Sparkles, Star, Ticket } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ export function HunterDiscovery() {
   const { state } = useGemHunter()
   const c = state.campaign
   const merchant = merchantOf(c.merchantId)
-  const [orderNote, setOrderNote] = useState(false)
+  const [orderNote, setOrderNote] = useKept('discover:orderNote', false)
 
   if (!merchant) {
     return <EmptyNote Icon={Info}>ไม่พบข้อมูลร้านสำหรับหน้าตัวอย่างนี้ ลองรีเซ็ตข้อมูลสาธิตของ GemHunter</EmptyNote>
@@ -107,7 +107,7 @@ export function HunterDiscovery() {
           </div>
 
           <div>
-            <Button variant="outline" className="h-12 w-full gap-2 px-6 text-[17px]" aria-expanded={orderNote} onClick={() => setOrderNote((o) => !o)}>
+            <Button variant="outline" className="h-auto min-h-12 max-w-full shrink py-2 whitespace-normal w-full gap-2 px-6 text-[17px]" aria-expanded={orderNote} onClick={() => setOrderNote((o) => !o)}>
               <ShoppingBag data-icon="inline-start" />
               สั่งผ่านช่องทางปกติของร้าน
             </Button>
@@ -131,7 +131,7 @@ export function HunterDiscovery() {
                 </strong>
                 <span className="text-[14px] text-muted-foreground">จากแพลตฟอร์ม (ตัวอย่าง ไม่มีคูปองจริง)</span>
               </p>
-              <Button asChild className="mt-4 h-12 w-full px-5 text-[17px]">
+              <Button asChild className="mt-4 h-auto min-h-12 max-w-full shrink py-2 whitespace-normal w-full px-5 text-[17px]">
                 <Link to="/gemhunter/photos?view=hunter">
                   <Camera data-icon="inline-start" />
                   ส่งรูปและรีวิวหลังสั่ง

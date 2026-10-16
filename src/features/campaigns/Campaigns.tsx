@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Ban, CalendarDays, Check, LifeBuoy, Lock, Megaphone, PlayCircle, Wallet, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { BondPair } from '@/components/BondPair'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/status/StatusBadge'
@@ -174,7 +174,7 @@ function CampaignCard({ plan }: { plan: GrowthPlan }) {
           </ul>
           <DialogFooter>
             <Button variant="outline" className="h-12 text-[17px]" onClick={() => setCancelOpen(false)}>ไม่ยกเลิก</Button>
-            <Button className="h-12 text-[17px]" onClick={() => { setCancelOpen(false); if (dispatch({ type: 'cancel', planId: plan.id })) toast('ยกเลิกแคมเปญแล้ว ไม่มีค่าปรับ'); else toast.error('ยกเลิกไม่ได้ในสถานะปัจจุบัน') }}>ยืนยันยกเลิกแคมเปญ</Button>
+            <Button variant="destructive" className="h-12 text-[17px]" onClick={() => { setCancelOpen(false); if (dispatch({ type: 'cancel', planId: plan.id })) toast('ยกเลิกแคมเปญแล้ว ไม่มีค่าปรับ'); else toast.error('ยกเลิกไม่ได้ในสถานะปัจจุบัน') }}>ยืนยันยกเลิกแคมเปญ</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -191,7 +191,7 @@ export function Campaigns() {
       {plans.length === 0 ? (
         <Empty className="surface">
           <EmptyHeader>
-            <EmptyArt className="mx-auto" />
+            <EmptyArt kind="campaigns" className="mx-auto" />
             <EmptyTitle className="text-[22px]">ยังไม่มีแคมเปญ</EmptyTitle>
             <EmptyDescription className="text-[17px]">เมื่อคุณสนใจแผนใดแผนหนึ่ง แคมเปญจะมาแสดงที่นี่</EmptyDescription>
           </EmptyHeader>

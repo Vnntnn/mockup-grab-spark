@@ -1,5 +1,7 @@
 import { ArrowLeft, Share2 } from 'lucide-react'
+import { LangToggle } from '@/i18n/LangToggle'
 import { cn } from '@/lib/utils'
+import { CustomerDemoTools } from './CustomerDemoTools'
 
 export interface PairingHeaderProps {
   step: number
@@ -9,72 +11,34 @@ export interface PairingHeaderProps {
   className?: string
 }
 
-export function PairingHeader({
-  step,
-  onBack,
-  onShare,
-  shareTitle,
-  className,
-}: PairingHeaderProps) {
-  const showBack = step >= 2
-  const showShare = step === 4
+const iconButton =
+  'flex min-h-[48px] min-w-[48px] cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary'
 
-  const getStepTitle = (): string => {
-    switch (step) {
-      case 1:
-        return 'จับคู่เมนูข้ามร้าน'
-      case 2:
-        return 'เลือกร้านแรก'
-      case 3:
-        return 'เลือกร้านที่สอง'
-      case 4:
-        return shareTitle || 'คู่เมนูของคุณ'
-      default:
-        return 'จับคู่เมนูข้ามร้าน'
-    }
-  }
+/** Flat bar on the page ground: back, a quiet title, share on the result. Not a heading; each screen owns its h1. */
+export function PairingHeader({ step, onBack, onShare, shareTitle, className }: PairingHeaderProps) {
+  // the page's own heading and the pair progress say where we are, so the bar only carries the brand on the overview
+  const title = step === 1 ? 'GemBond' : (shareTitle ?? '')
 
   return (
-    <header
-      className={cn(
-        'sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/95 px-4 py-2 backdrop-blur-xs',
-        className
-      )}
-    >
-      <div className="flex items-center min-h-[48px] min-w-[48px]">
-        {showBack ? (
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label="ย้อนกลับ"
-            className="min-h-[48px] min-w-[48px] p-2 flex items-center justify-center rounded-full text-foreground hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
-          >
+    <header className={cn('bg-background', className)}>
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-2 py-1 lg:px-5">
+      <div className="min-h-[48px] min-w-[48px]">
+        {(step >= 1 && onBack) && (
+          <button type="button" onClick={onBack} aria-label="ย้อนกลับ" className={iconButton}>
             <ArrowLeft className="size-5" aria-hidden="true" />
           </button>
-        ) : (
-          <div className="min-h-[48px] min-w-[48px]" aria-hidden="true" />
         )}
       </div>
-
-      <div className="flex-1 text-center px-2">
-        <h1 className="font-heading text-[17px] font-bold text-ink truncate">
-          {getStepTitle()}
-        </h1>
-      </div>
-
-      <div className="flex items-center justify-end min-h-[48px] min-w-[48px]">
-        {showShare ? (
-          <button
-            type="button"
-            onClick={onShare}
-            aria-label="แชร์คู่เมนูนี้"
-            className="min-h-[48px] min-w-[48px] p-2 flex items-center justify-center rounded-full text-foreground hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
-          >
+      <p className="pr-body truncate px-2 font-semibold">{title}</p>
+      <div className="flex min-h-[48px] min-w-[48px] items-center gap-1">
+        <LangToggle />
+        <CustomerDemoTools />
+        {step === 4 && onShare && (
+          <button type="button" onClick={onShare} aria-label="แชร์คู่เมนูนี้" className={iconButton}>
             <Share2 className="size-5" aria-hidden="true" />
           </button>
-        ) : (
-          <div className="min-h-[48px] min-w-[48px]" aria-hidden="true" />
         )}
+      </div>
       </div>
     </header>
   )

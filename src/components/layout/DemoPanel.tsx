@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { ExternalLink, FlaskConical } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import { ResetButton } from './ResetButton'
+import { DemoCustomerLinks } from './DemoCustomerLinks'
+import { DemoRestart } from './DemoRestart'
 import { useApp } from '@/app/store'
 import { demoTargets, headlinePlan, partnerOf } from '@/app/selectors'
 import { cn } from '@/lib/utils'
@@ -12,6 +15,8 @@ import { cn } from '@/lib/utils'
 /** Presenter-only controls in a closed drawer, opened from the demo bar so the merchant UI stays simple. */
 export function DemoPanel({ className }: { className?: string }) {
   const { state, dispatch } = useApp()
+  // a simulated step closes the drawer, so the change it causes is seen on the page behind it (the bond animations wait for this)
+  const [open, setOpen] = useState(false)
   const head = headlinePlan(state)
   const { partner: partnerTarget, change: changeTarget, complete: activeTarget } = demoTargets(state)
   const row = (
@@ -27,7 +32,10 @@ export function DemoPanel({ className }: { className?: string }) {
         className="h-11 justify-start px-4 text-[15px]"
         disabled={!enabled}
         onClick={() => {
-          if (run()) toast.info(done)
+          if (run()) {
+            toast.info(done)
+            setOpen(false)
+          }
           else toast.error('ทำรายการนี้ไม่ได้ในสถานะปัจจุบัน')
         }}
       >
@@ -37,7 +45,7 @@ export function DemoPanel({ className }: { className?: string }) {
     </div>
   )
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -48,7 +56,7 @@ export function DemoPanel({ className }: { className?: string }) {
           เครื่องมือสาธิต
         </Button>
       </SheetTrigger>
-      <SheetContent className="overflow-y-auto p-5">
+      <SheetContent className="overflow-y-auto p-5 [&_[data-slot=button]]:h-auto [&_[data-slot=button]]:min-h-11 [&_[data-slot=button]]:py-2 [&_[data-slot=button]]:text-left [&_[data-slot=button]]:whitespace-normal">
         <SheetHeader className="p-0 pr-10">
           <SheetTitle className="text-xl font-semibold text-ink">เครื่องมือสาธิต</SheetTitle>
           <SheetDescription className="text-[15px]">
@@ -56,6 +64,8 @@ export function DemoPanel({ className }: { className?: string }) {
           </SheetDescription>
         </SheetHeader>
         <div className="flex flex-col gap-5">
+          <DemoRestart />
+          <DemoCustomerLinks />
           {head && (
             <div className="border-y border-border py-3">
               <p className="mb-2 text-sm text-muted-foreground">แผนที่กำลังสาธิต: {partnerOf(state, head).name}</p>
@@ -89,7 +99,7 @@ export function DemoPanel({ className }: { className?: string }) {
             <Button asChild variant="outline" className="h-auto min-h-11 min-w-0 justify-start px-4 py-2 text-left text-[15px] whitespace-normal">
               <Link to="/gemhunter">
                 <ExternalLink data-icon="inline-start" />
-                ดูต้นแบบ GemHunter (ในแพลตฟอร์มสั่งอาหาร)
+                <span>ดูต้นแบบ GemHunter (ในแพลตฟอร์มสั่งอาหาร)</span>
               </Link>
             </Button>
           </div>

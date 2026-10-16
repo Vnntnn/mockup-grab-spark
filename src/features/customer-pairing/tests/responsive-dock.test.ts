@@ -28,7 +28,8 @@ describe('Responsive Dock & Header', () => {
         onNext: () => {},
       }))
       // Mobile fixed class
-      expect(html).toContain('fixed bottom-0')
+      expect(html).toContain('fixed')
+      expect(html).toContain('bottom-0')
       expect(html).toContain('inset-x-0')
       expect(html).toContain('z-40')
       expect(html).toContain('bg-card')
@@ -41,9 +42,9 @@ describe('Responsive Dock & Header', () => {
       expect(html).toContain('md:-translate-x-1/2')
       expect(html).toContain('md:w-[calc(100%-3rem)]')
       expect(html).toContain('md:max-w-lg')
-      expect(html).toContain('md:rounded-2xl')
+      expect(html).toContain('md:rounded-xl')
       expect(html).toContain('md:border')
-      expect(html).toContain('md:shadow-lg')
+      expect(html).toContain('md:shadow-[var(--shadow-edge)]')
       // Desktop hidden class for bottom dock
       expect(html).toContain('lg:hidden')
     })
@@ -57,13 +58,10 @@ describe('Responsive Dock & Header', () => {
         onNext: () => {},
         variant: 'desktop-sidebar',
       }))
-      expect(html).toContain('sticky top-8')
-      expect(html).toContain('hidden lg:block')
-      expect(html).toContain('bg-card')
-      expect(html).toContain('border')
-      expect(html).toContain('border-border')
-      expect(html).toContain('rounded-2xl')
-      expect(html).toContain('p-6')
+      expect(html).toContain('sticky top-40')
+      expect(html).toContain('hidden')
+      expect(html).toContain('lg:block')
+      expect(html).toContain('border-t')
     })
 
     it('enforces min-h-[48px] touch targets on buttons', () => {
@@ -74,7 +72,7 @@ describe('Responsive Dock & Header', () => {
         isEnabled: true,
         onNext: () => {},
       }))
-      expect(html).toContain('min-h-[48px]')
+      expect(html).toContain('min-h-[52px]') // at least the 48px touch target
     })
 
     it('shows "เลือกเมนูร้านที่สอง" on Step 2 in normal progression', () => {
@@ -110,7 +108,7 @@ describe('Responsive Dock & Header', () => {
       expect(html).toContain('ดูคู่เมนูของคุณ')
     })
 
-    it('uses Grab Green when enabled and supports disabled state', () => {
+    it('uses the brand green when enabled and supports disabled state', () => {
       const enabledHtml = renderToString(React.createElement(SelectionDock, {
         step: 2,
         isEditing: false,
@@ -118,9 +116,8 @@ describe('Responsive Dock & Header', () => {
         isEnabled: true,
         onNext: () => {},
       }))
-      expect(enabledHtml).toContain('bg-[#00B14F]')
-      expect(enabledHtml).toContain('text-[#0A0A0A]')
-      expect(enabledHtml).toContain('hover:bg-[#009E46]')
+      expect(enabledHtml).toContain('bg-brand')
+      expect(enabledHtml).toContain('text-primary-foreground')
 
       const disabledHtml = renderToString(React.createElement(SelectionDock, {
         step: 2,
@@ -132,15 +129,35 @@ describe('Responsive Dock & Header', () => {
       expect(disabledHtml).toContain('disabled')
     })
 
-    it('displays summaryText in the dock', () => {
-      const html = renderToString(React.createElement(SelectionDock, {
+    it('shows the hint text only while the action is unavailable (the pinned pair progress shows what is chosen)', () => {
+      const disabled = renderToString(React.createElement(SelectionDock, {
+        step: 2,
+        isEditing: false,
+        summaryText: 'กรุณาเลือก 1 รายการ',
+        isEnabled: false,
+        onNext: () => {},
+      }))
+      expect(disabled).toContain('กรุณาเลือก 1 รายการ')
+      const enabled = renderToString(React.createElement(SelectionDock, {
         step: 2,
         isEditing: false,
         summaryText: 'เลือกแล้ว: ข้าวมันไก่ทอด · ฿70',
         isEnabled: true,
         onNext: () => {},
       }))
-      expect(html).toContain('เลือกแล้ว: ข้าวมันไก่ทอด · ฿70')
+      expect(enabled).not.toContain('เลือกแล้ว')
+    })
+
+    it('names the restaurant that comes next on the step 2 button', () => {
+      const html = renderToString(React.createElement(SelectionDock, {
+        step: 2,
+        isEditing: false,
+        summaryText: '',
+        isEnabled: true,
+        nextRestaurant: 'ชาไทยป้าอร',
+        onNext: () => {},
+      }))
+      expect(html).toContain('ถัดไป: เลือกจากชาไทยป้าอร')
     })
 
     it('contains zero emojis in SelectionDock', () => {
@@ -156,13 +173,12 @@ describe('Responsive Dock & Header', () => {
   })
 
   describe('PairingHeader', () => {
-    it('does NOT render back button on Step 1', () => {
-      const html = renderToString(React.createElement(PairingHeader, {
-        step: 1,
-        onBack: () => {},
-      }))
-      expect(html).not.toContain('aria-label="ย้อนกลับ"')
-      expect(html).not.toContain('aria-label="แชร์คู่เมนูนี้"')
+    it('renders back on Step 1 only when there is somewhere to go back to (the discovery map); never share', () => {
+      const withBack = renderToString(React.createElement(PairingHeader, { step: 1, onBack: () => {} }))
+      expect(withBack).toContain('aria-label="ย้อนกลับ"')
+      expect(withBack).not.toContain('aria-label="แชร์คู่เมนูนี้"')
+      const withoutBack = renderToString(React.createElement(PairingHeader, { step: 1 }))
+      expect(withoutBack).not.toContain('aria-label="ย้อนกลับ"')
     })
 
     it('renders back button with min 48px touch target on Step 2 and 3', () => {

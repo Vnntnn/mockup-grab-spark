@@ -1,144 +1,64 @@
-import { Gem } from '@/components/GemMark'
-import { initial, baht } from '@/lib/format'
-import { DishSvgArt } from '../components/DishSvgArt'
+import { baht } from '@/lib/format'
+import { PairingOverview } from '../components/PairingOverview'
 import { APPROVED_SAMPLE_PAIR } from '../data'
+import { pickText, toNetRestaurant } from '../network'
 import type { PairingCampaignData } from '../types'
 
 export interface Screen1DiscoverProps {
   data: PairingCampaignData
   onStart: () => void
   onLoadSample: () => void
+  /** Back to the map and list of all pairings. */
+  onDiscover?: () => void
 }
 
-export function Screen1Discover({
-  data,
-  onStart,
-  onLoadSample,
-}: Screen1DiscoverProps) {
-  const sampleDishA =
-    data.menuA.find((d) => d.slug === APPROVED_SAMPLE_PAIR.dishASlug) ??
-    data.menuA[0]
-  const sampleDishB =
-    data.menuB.find((d) => d.slug === APPROVED_SAMPLE_PAIR.dishBSlug) ??
-    data.menuB[0]
+const link = 'pr-body flex min-h-[48px] cursor-pointer items-center font-semibold text-link decoration-1 underline underline-offset-[0.4em]'
+
+/** The overview of one pairing, in the same two-column grammar as everywhere else. Also where a shared campaign link lands. */
+export function Screen1Discover({ data, onStart, onLoadSample, onDiscover }: Screen1DiscoverProps) {
+  const sampleDishA = data.menuA.find((d) => d.slug === APPROVED_SAMPLE_PAIR.dishASlug) ?? data.menuA[0]
+  const sampleDishB = data.menuB.find((d) => d.slug === APPROVED_SAMPLE_PAIR.dishBSlug) ?? data.menuB[0]
 
   return (
-    <div className="flex flex-col gap-6 py-4 max-w-lg mx-auto">
-      {/* Restaurant Chips Header */}
-      <div className="flex items-center justify-center">
-        <div className="inline-flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-xs">
-          <div className="flex items-center gap-2">
-            <Gem
-              glyph={data.restaurantA.id === 'm-khaohom' ? 'ข' : initial(data.restaurantA.name).charAt(0)}
-              tone="self"
-              className="size-7 shrink-0"
-            />
-            <div className="text-left leading-tight">
-              <span className="block font-bold text-[14px] text-ink">
-                {data.restaurantA.name}
-              </span>
-              <span className="block text-[11px] text-muted-foreground">
-                {data.restaurantA.category}
-              </span>
-            </div>
-          </div>
+    <div className="px-4 pb-10 pt-2 lg:px-0">
+      <h1 className="pr-display">จับคู่เมนูจาก 2 ร้านในย่านคุณ</h1>
+      <p className="pr-body mt-2 text-muted-foreground">
+        เลือก 1 {pickText(data.roleA.pick)} + 1 {pickText(data.roleB.pick)} แล้วดูคู่เมนูของคุณ
+      </p>
 
-          <div
-            className="flex items-center text-muted-foreground/40 px-0.5"
-            aria-hidden="true"
-          >
-            <div className="h-px w-3 bg-border" />
-            <svg
-              className="size-2 text-muted-foreground/60 mx-1"
-              viewBox="0 0 8 8"
-              fill="currentColor"
-            >
-              <polygon points="4,0 8,4 4,8 0,4" />
-            </svg>
-            <div className="h-px w-3 bg-border" />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Gem
-              glyph={data.restaurantB.id === 'm-satay' ? 'ส' : initial(data.restaurantB.name).charAt(0)}
-              tone="partner"
-              className="size-7 shrink-0"
-            />
-            <div className="text-left leading-tight">
-              <span className="block font-bold text-[14px] text-ink">
-                {data.restaurantB.name}
-              </span>
-              <span className="block text-[11px] text-muted-foreground">
-                {data.restaurantB.category.includes('ทานเล่น')
-                  ? 'ของว่างทานเล่น'
-                  : data.restaurantB.category}
-              </span>
-            </div>
-          </div>
-        </div>
+      <div className="mt-4">
+        <PairingOverview first={toNetRestaurant(data.restaurantA)} second={toNetRestaurant(data.restaurantB)} pairingId={data.campaignId} withPlates detailed />
       </div>
 
-      {/* Main Headline */}
-      <div className="text-center px-2">
-        <h1 className="font-heading font-bold text-2xl sm:text-3xl text-ink">
-          จับคู่เมนูจาก 2 ร้านในย่านคุณ
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          เลือก 1 เมนูจานหลัก และ 1 ของว่างจาก 2 ร้านพันธมิตร เพื่อสร้างชุดเมนูคู่สำหรับมื้อพิเศษ
-        </p>
-      </div>
+      <button
+        type="button"
+        onClick={onStart}
+        className="mt-5 flex min-h-[52px] w-full cursor-pointer items-center justify-center rounded-[0.625rem] bg-brand px-8 font-heading text-[17px] font-bold text-primary-foreground transition-colors hover:bg-[#009e46]"
+      >
+        เริ่มจับคู่เมนู
+      </button>
 
-      {/* Hero Visual Composition: Interlocking Dual Dish Showcase */}
-      <div className="my-2 flex items-center justify-center">
-        <div className="relative flex items-center justify-center -space-x-6 sm:-space-x-8">
-          <div className="relative z-10 overflow-hidden rounded-2xl border border-border bg-card shadow-md">
-            <DishSvgArt
-              slug="khao-man-gai-tom"
-              size="md"
-              standaloneLabel="ข้าวมันไก่ต้ม"
-            />
+      {data.hasSample && (
+        <div className="mt-4 flex items-center justify-between gap-4 border-t border-border pt-3">
+          <div className="min-w-0">
+            <h2 className="pr-caption font-semibold text-muted-foreground">คู่เมนูตัวอย่างสำหรับการสาธิต</h2>
+            <p className="pr-body font-medium">
+              <span className="inline-block max-w-full">{`${sampleDishA.name} (${baht(sampleDishA.priceBaht)})`}</span>
+              <span className="mx-1.5 text-muted-foreground">+</span>
+              <span className="inline-block max-w-full">{`${sampleDishB.name} (${baht(sampleDishB.priceBaht)})`}</span>
+            </p>
           </div>
-          <div className="relative z-20 -mt-6 sm:-mt-8 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
-            <DishSvgArt
-              slug="moo-satay-10"
-              size="md"
-              standaloneLabel="หมูสะเต๊ะ 10 ไม้"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Primary CTA Button */}
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={onStart}
-          className="h-[52px] min-h-[48px] w-full rounded-xl bg-[#00B14F] text-[#0A0A0A] font-heading font-bold text-[17px] shadow-sm hover:bg-[#009E46] transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          เริ่มจับคู่เมนู
-        </button>
-      </div>
-
-      {/* Secondary Sample Pairing Shelf */}
-      <div className="rounded-2xl border border-border/70 bg-card/60 p-4 text-center mt-2">
-        <h2 className="font-heading font-semibold text-xs tracking-wide text-muted-foreground uppercase">
-          คู่เมนูตัวอย่างสำหรับการสาธิต
-        </h2>
-        <div className="mt-2 text-sm text-ink font-medium">
-          <span>{sampleDishA ? `${sampleDishA.name} (${baht(sampleDishA.priceBaht)})` : 'ข้าวมันไก่ต้ม (฿65)'}</span>
-          <span className="mx-2 text-muted-foreground">+</span>
-          <span>{sampleDishB ? `${sampleDishB.name} (${baht(sampleDishB.priceBaht)})` : 'หมูสะเต๊ะ 10 ไม้ (฿120)'}</span>
-        </div>
-        <div className="mt-3">
-          <button
-            type="button"
-            onClick={onLoadSample}
-            className="min-h-[48px] px-4 inline-flex items-center justify-center rounded-xl border border-border bg-background text-sm font-semibold text-foreground hover:bg-secondary cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-ring"
-          >
+          <button type="button" onClick={onLoadSample} className={`${link} shrink-0 px-2`}>
             ดูคู่นี้
           </button>
         </div>
-      </div>
+      )}
+
+      {onDiscover && (
+        <button type="button" onClick={onDiscover} className={`${link} mt-1`}>
+          ดูคู่ร้านอื่น
+        </button>
+      )}
     </div>
   )
 }

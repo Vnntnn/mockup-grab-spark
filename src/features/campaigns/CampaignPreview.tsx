@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Copy, ExternalLink } from 'lucide-react'
-import { toast } from 'sonner'
+import { toast } from '@/i18n/toast'
 import { Gem } from '@/components/GemMark'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -90,7 +90,7 @@ export function CampaignPreview({ self, partner, campaignId }: { self: Merchant;
               <Copy data-icon="inline-start" />
               คัดลอกลิงก์
             </Button>
-            <Button asChild variant="outline" className="h-11 min-h-[48px] self-start text-[15px]">
+            <Button asChild variant="outline" className="h-auto min-h-[48px] self-start py-2 text-left text-[15px] whitespace-normal">
               <Link to={`/pair/${campaignId}`}>
                 <ExternalLink data-icon="inline-start" />
                 เปิดมุมมองลูกค้า (Interactive Demo)

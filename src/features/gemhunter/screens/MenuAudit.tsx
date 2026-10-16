@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
+import { useKept } from '@/i18n/keep'
 import { ArrowRight, Check, CheckCheck, CircleDashed, History, Lock, Pencil, ShieldCheck, Sparkles, Store, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -272,8 +273,8 @@ export function MenuAuditScreen() {
   const { campaign } = state
   const run = useHunterAction()
   const navigate = useNavigate()
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [draft, setDraft] = useState('')
+  const [editingId, setEditingId] = useKept<string | null>('menu:editing', null)
+  const [draft, setDraft] = useKept('menu:draft', '')
 
   const merchant = merchantOf(campaign.merchantId)
   const priceOf = (name: string) => merchant?.sampleMenu.find((m) => m.name === name)?.priceBaht
